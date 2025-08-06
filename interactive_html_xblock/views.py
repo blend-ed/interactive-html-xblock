@@ -50,11 +50,7 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
 
         # Load the template
         try:
-            template = self.loader.render_django_template(
-                'templates/student_view.html',
-                context=context,
-                i18n_service=self._i18n_service(),
-            )
+            template = self.render_template('static/html/student_view.html', context)
         except Exception as e:
             log.error("Error rendering student view template: %s", str(e))
             template = "<div class='xblock-error'>Error loading content</div>"
@@ -91,11 +87,7 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
 
         # Load the studio template
         try:
-            template = self.loader.render_django_template(
-                'templates/studio_view.html',
-                context=context,
-                i18n_service=self._i18n_service(),
-            )
+            template = self.render_template('static/html/studio_view.html', context)
         except Exception as e:
             log.error("Error rendering studio view template: %s", str(e))
             template = "<div class='xblock-error'>Error loading studio view</div>"
@@ -152,6 +144,24 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
         """
         service = self.runtime.service(self, 'i18n')
         return service
+
+    def render_template(self, template_path, context):
+        """
+        Render a template with the given context. The template is translated
+        according to the user's language.
+
+        Args:
+            template_path (str): The path to the template
+            context(dict, optional): The context to render in the template
+
+        Returns:
+            str: The rendered template
+        """
+        return self.loader.render_django_template(
+            template_path,
+            context,
+            i18n_service=self._i18n_service(),
+        )
 
     @XBlock.json_handler
     def save_interaction(self, data, suffix=''):
