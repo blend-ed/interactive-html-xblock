@@ -1,20 +1,7 @@
 {% load i18n %}
-<div class="interactive-js-block" data-block-id="{{ block_id }}" role="region" aria-label="{{ display_name }}">
-    <!-- Header Section -->
-    <div class="interactive-js-header">
-        <h3 class="interactive-js-title">{{ display_name }}</h3>
-        {% if enable_debug_mode %}
-        <div class="debug-info" role="status" aria-live="polite">
-            <small>
-                <span class="debug-label">{% trans "Interactions" %}:</span> 
-                <span class="debug-value" id="interaction-count">{{ interaction_count }}</span> | 
-                <span class="debug-label">{% trans "Last" %}:</span> 
-                <span class="debug-value" id="last-interaction">{{ last_interaction_time|default:"None" }}</span>
-            </small>
-        </div>
-        {% endif %}
-    </div>
 
+{% if html_content %}
+<div class="interactive-js-block" data-block-id="{{ block_id }}" role="region" aria-label="{{ display_name }}">
     <!-- Main Content Section -->
     <div class="interactive-js-content">
         <!-- Author's HTML content -->
@@ -98,68 +85,54 @@
                                 self.showSuccess('Interaction saved successfully');
                             } else {
                                 console.error('Failed to save interaction:', response.message);
-                                self.showError(response.message || 'Failed to save interaction');
+                                self.showError('Failed to save interaction: ' + response.message);
                             }
                         },
                         error: function(xhr, status, error) {
                             self.showLoading(false);
-                            console.error('Error saving interaction:', error);
+                            console.error('AJAX error:', error);
                             self.showError('Network error: ' + error);
                         }
                     });
                 },
                 
-                showLoading: function(show) {
-                    var indicator = document.getElementById('loading-indicator');
-                    if (indicator) {
-                        indicator.style.display = show ? 'block' : 'none';
-                    }
-                },
-                
                 showError: function(message) {
+                    console.error('InteractiveJSBlock Error:', message);
                     var errorDisplay = document.getElementById('error-display');
                     var errorMessage = errorDisplay.querySelector('.error-message');
-                    if (errorDisplay && errorMessage) {
-                        errorMessage.textContent = message;
-                        errorDisplay.style.display = 'block';
-                        // Hide after 5 seconds
-                        setTimeout(function() {
-                            errorDisplay.style.display = 'none';
-                        }, 5000);
-                    }
+                    errorMessage.textContent = message;
+                    errorDisplay.style.display = 'block';
+                    
+                    // Hide error after 5 seconds
+                    setTimeout(function() {
+                        errorDisplay.style.display = 'none';
+                    }, 5000);
+                },
+                
+                showLoading: function(show) {
+                    var loadingIndicator = document.getElementById('loading-indicator');
+                    loadingIndicator.style.display = show ? 'block' : 'none';
                 },
                 
                 showSuccess: function(message) {
-                    // You can implement a success notification here
-                    console.log('Success:', message);
+                    console.log('InteractiveJSBlock Success:', message);
+                    // You can add a success indicator here if needed
                 },
                 
                 updateDebugInfo: function(response) {
-                    var countElement = document.getElementById('interaction-count');
-                    var countDebugElement = document.getElementById('interaction-count-debug');
-                    var lastElement = document.getElementById('last-interaction');
-                    var lastDebugElement = document.getElementById('last-interaction-debug');
-                    
-                    if (countElement) {
-                        countElement.textContent = response.interaction_count;
-                    }
-                    if (countDebugElement) {
-                        countDebugElement.textContent = response.interaction_count;
-                    }
-                    if (lastElement) {
-                        lastElement.textContent = new Date().toISOString();
-                    }
-                    if (lastDebugElement) {
-                        lastDebugElement.textContent = new Date().toISOString();
+                    if (response.interaction_count !== undefined) {
+                        var countElements = document.querySelectorAll('#interaction-count, #interaction-count-debug');
+                        countElements.forEach(function(el) {
+                            el.textContent = response.interaction_count;
+                        });
                     }
                 }
             };
-
-            // Make submitInteraction function available globally
+            
+            // Make submitInteraction globally available for author's JavaScript
             window.submitInteraction = function(data) {
-                if (!data || typeof data !== 'object') {
-                    console.error('submitInteraction: data must be a JSON object');
-                    window.XBlockInterface.showError('Invalid data format');
+                if (typeof data !== 'object') {
+                    console.error('submitInteraction: data must be an object');
                     return;
                 }
                 
@@ -172,36 +145,37 @@
                 data.block_id = '{{ block_id }}';
                 data.display_name = '{{ display_name }}';
                 
-                // Send via XBlockInterface
-                window.XBlockInterface.postMessage({
-                    type: 'interaction',
-                    payload: data
-                });
+                console.log('submitInteraction called with:', data);
+                window.XBlockInterface.saveInteraction(data);
             };
-
-            // Error handling for author's JavaScript
-            window.addEventListener('error', function(event) {
-                console.error('InteractiveJSBlock: JavaScript error in author code:', event.error);
-                window.XBlockInterface.showError('JavaScript error: ' + event.error.message);
+            
+            // Initialize when DOM is ready
+            $(document).ready(function() {
+                console.log('InteractiveJSBlock initialized for block: {{ block_id }}');
+                
+                // Apply author's CSS if provided
+                {% if css_content %}
+                var styleElement = document.createElement('style');
+                styleElement.textContent = '{{ css_content|safe|escapejs }}';
+                document.head.appendChild(styleElement);
+                {% endif %}
+                
+                // Execute author's JavaScript if provided
+                {% if js_content %}
+                try {
+                    {{ js_content|safe }}
+                } catch (error) {
+                    console.error('Error executing author JavaScript:', error);
+                    window.XBlockInterface.showError('JavaScript error: ' + error.message);
+                }
+                {% endif %}
             });
-
-            // Log when interface is ready
-            console.log('InteractiveJSBlock: XBlockInterface ready for block {{ block_id }}');
+            
         })();
     </script>
-
-    <!-- Author's CSS content -->
-    <style>
-        {{ css_content|safe }}
-    </style>
-
-    <!-- Author's JavaScript content -->
-    <script type="text/javascript">
-        try {
-            {{ js_content|safe }}
-        } catch (error) {
-            console.error('InteractiveJSBlock: Error in author JavaScript:', error);
-            window.XBlockInterface.showError('JavaScript error: ' + error.message);
-        }
-    </script>
-</div> 
+</div>
+{% else %}
+<div class="interactive-js-block">
+    <p>{% trans "No content. Please add HTML content in the studio." %}</p>
+</div>
+{% endif %} 

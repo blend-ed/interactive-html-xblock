@@ -7,6 +7,16 @@ import logging
 from xblock.core import XBlock
 from xblock.validation import ValidationMessage
 from xblock.exceptions import JsonHandlerError
+from web_fragments.fragment import Fragment
+from webob import Response
+try:
+    # Older Open edX releases (Redwood and earlier) install a backported version of
+    # importlib.resources: https://pypi.org/project/importlib-resources/
+    import importlib_resources
+except ModuleNotFoundError:
+    # Starting with Sumac, Open edX drops importlib-resources in favor of the standard library:
+    # https://docs.python.org/3/library/importlib.resources.html#module-importlib.resources
+    from importlib import resources as importlib_resources
 try:
     from xblock.utils.resources import ResourceLoader
     from xblock.utils.studio_editable import StudioEditableXBlockMixin
@@ -27,6 +37,14 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
 
     loader = ResourceLoader(__name__)
     static_js_init = 'InteractiveJSBlockView'
+    
+    def resource_string(self, path):
+        """Handy helper for getting resources from our kit."""
+        try:
+            data = importlib_resources.files(__name__).joinpath(path).read_bytes()
+        except TypeError:
+            data = importlib_resources.files(__package__).joinpath(path).read_bytes()
+        return data.decode("utf8")
     
     # Define editable fields for StudioEditableXBlockMixin
     editable_fields = [
@@ -83,16 +101,13 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             log.error("Error rendering student view template: %s", str(e))
             template = "<div class='xblock-error'>Error loading content</div>"
 
-        # Create fragment
-        fragment = self.build_fragment(
-            template=template,
-            context=context,
-            css=['static/css/interactive_js_block.css'],
-            js=['static/js/src/interactive_js_block.js'],
-            js_init=self.static_js_init,
-        )
-
-        return fragment
+        # Create fragment using h5pxblock pattern
+        frag = Fragment(template)
+        frag.add_css(self.resource_string("static/css/interactive_js_block.css"))
+        frag.add_javascript(self.resource_string("public/js/interactive_js_block.js"))
+        frag.initialize_js(self.static_js_init)
+        
+        return frag
 
     def studio_view(self, context=None):
         """
@@ -124,58 +139,16 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             log.error("Error rendering studio view template: %s", str(e))
             template = "<div class='xblock-error'>Error loading studio view</div>"
 
-        # Create fragment
-        fragment = self.build_fragment(
-            template=template,
-            context=context,
-            css=['static/css/studio_view.css'],
-            js=['static/js/src/studio_view.js'],
-            js_init='StudioView',
-        )
+        # Create fragment using h5pxblock pattern
+        frag = Fragment(template)
+        frag.add_javascript(self.resource_string("public/js/studio_view.js"))
+        frag.initialize_js('StudioView')
+        
+        return frag
 
-        return fragment
 
-    def build_fragment(self, template='', context=None, css=None, js=None, js_init=None):
-        """
-        Creates a fragment for display.
-        """
-        context = context or {}
-        css = css or []
-        js = js or []
-        
-        from web_fragments.fragment import Fragment
-        fragment = Fragment(template)
-        
-        # Add CSS
-        for item in css:
-            try:
-                if item.startswith('/'):
-                    fragment.add_css_url(item)
-                else:
-                    data = self.loader.load_unicode(item)
-                    fragment.add_css(data)
-            except Exception as e:
-                log.error("Error loading CSS file %s: %s", item, str(e))
-        
-        # Add JavaScript
-        for item in js:
-            try:
-                url = self.runtime.local_resource_url(self, item)
-                fragment.add_javascript_url(url)
-            except Exception as e:
-                log.error("Error loading JavaScript file %s: %s", item, str(e))
-        
-        if js_init:
-            fragment.initialize_js(js_init)
-        
-        return fragment
 
-    def _i18n_service(self):
-        """
-        Provide the XBlock runtime's i18n service
-        """
-        service = self.runtime.service(self, 'i18n')
-        return service
+
 
     def render_template(self, template_path, context):
         """
@@ -192,7 +165,7 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
         return self.loader.render_django_template(
             template_path,
             context,
-            i18n_service=self._i18n_service(),
+            i18n_service=self.runtime.service(self, 'i18n'),
         )
 
     @XBlock.json_handler
@@ -317,4 +290,60 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
                                 'All URLs must be non-empty strings'
                             )
                         )
-                        break 
+                        break
+
+    @XBlock.handler
+    def studio_submit(self, request, suffix=""):
+        """
+        Handle studio form submission for saving block settings
+        """
+        try:
+            # Parse the JSON data from the request
+            data = json.loads(request.body.decode('utf-8'))
+            
+            # Update block fields
+            self.display_name = data.get('display_name', 'Interactive JS Block')
+            self.html_content = data.get('html_content', '')
+            self.css_content = data.get('css_content', '')
+            self.js_content = data.get('js_content', '')
+            self.weight = int(data.get('weight', 1))
+            self.enable_debug_mode = data.get('enable_debug_mode', False)
+            self.auto_grade_enabled = data.get('auto_grade_enabled', False)
+            
+            # Handle allowed_external_urls
+            allowed_urls = data.get('allowed_external_urls', [])
+            if isinstance(allowed_urls, list):
+                self.allowed_external_urls = allowed_urls
+            else:
+                self.allowed_external_urls = []
+            
+            # Validate required fields
+            if not self.html_content.strip():
+                return Response(
+                    json.dumps({"result": "error", "message": "HTML content cannot be empty"}),
+                    content_type="application/json",
+                    charset="utf8"
+                )
+            
+            log.info("Studio settings saved successfully for block %s", str(self.location))
+            
+            return Response(
+                json.dumps({"result": "success"}),
+                content_type="application/json",
+                charset="utf8"
+            )
+            
+        except json.JSONDecodeError as e:
+            log.error("Invalid JSON in studio submit: %s", str(e))
+            return Response(
+                json.dumps({"result": "error", "message": "Invalid data format"}),
+                content_type="application/json",
+                charset="utf8"
+            )
+        except Exception as e:
+            log.error("Error saving studio settings: %s", str(e))
+            return Response(
+                json.dumps({"result": "error", "message": "Failed to save settings"}),
+                content_type="application/json",
+                charset="utf8"
+            ) 

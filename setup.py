@@ -176,6 +176,6 @@ setup(
             'interactive_js_block = interactive_html_xblock:InteractiveJSBlock',
         ]
     },
-    package_data=package_data("interactive_html_xblock", ["static", "public"]),
+    package_data=package_data("interactive_html_xblock", ["static", "public", "css"]),
 
 )
