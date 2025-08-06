@@ -10,17 +10,6 @@ class InteractiveJSBlockModelMixin(object):
     Handle data access for InteractiveJSBlock instances
     """
 
-    editable_fields = [
-        'display_name',
-        'html_content',
-        'css_content',
-        'js_content',
-        'allowed_external_urls',
-        'enable_debug_mode',
-        'auto_grade_enabled',
-        'weight',
-    ]
-
     # Author content fields
     html_content = String(
         display_name=_('HTML Content'),
@@ -105,6 +94,30 @@ class InteractiveJSBlockModelMixin(object):
     # XBlock configuration
     has_score = True
     show_in_read_only_mode = True
+
+    def get_allowed_external_urls(self):
+        """
+        Ensure allowed_external_urls is always a list
+        """
+        urls = getattr(self, 'allowed_external_urls', None)
+        if urls is None:
+            return []
+        if not isinstance(urls, list):
+            return []
+        return urls
+
+    def ensure_field_initialization(self):
+        """
+        Ensure all fields are properly initialized
+        """
+        if not hasattr(self, 'allowed_external_urls') or self.allowed_external_urls is None:
+            self.allowed_external_urls = []
+        if not hasattr(self, 'learner_response') or self.learner_response is None:
+            self.learner_response = {}
+        if not hasattr(self, 'interaction_count') or self.interaction_count is None:
+            self.interaction_count = 0
+        if not hasattr(self, 'last_interaction_time') or self.last_interaction_time is None:
+            self.last_interaction_time = ''
 
     def max_score(self):
         """

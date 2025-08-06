@@ -27,25 +27,47 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
 
     loader = ResourceLoader(__name__)
     static_js_init = 'InteractiveJSBlockView'
+    
+    # Define editable fields for StudioEditableXBlockMixin
+    editable_fields = [
+        'display_name',
+        'html_content',
+        'css_content',
+        'js_content',
+        'allowed_external_urls',
+        'enable_debug_mode',
+        'auto_grade_enabled',
+        'weight',
+    ]
+
+    def get_editable_fields(self):
+        """
+        Return the list of editable fields for StudioEditableXBlockMixin
+        """
+        return self.editable_fields
 
     def student_view(self, context=None):
         """
         Create the student view of the InteractiveJSBlock
         """
+        # Ensure all fields are properly initialized
+        self.ensure_field_initialization()
+        
         context = context or {}
         context = dict(context)
         
         # Prepare the context for rendering
         context.update({
-            'display_name': self.display_name,
-            'html_content': self.html_content,
-            'css_content': self.css_content,
-            'js_content': self.js_content,
-            'allowed_external_urls': self.allowed_external_urls,
-            'enable_debug_mode': self.enable_debug_mode,
-            'learner_response': self.learner_response,
-            'interaction_count': self.interaction_count,
-            'last_interaction_time': self.last_interaction_time,
+            'block_id': str(self.location),
+            'display_name': getattr(self, 'display_name', 'Interactive JS Block'),
+            'html_content': getattr(self, 'html_content', ''),
+            'css_content': getattr(self, 'css_content', ''),
+            'js_content': getattr(self, 'js_content', ''),
+            'allowed_external_urls': self.get_allowed_external_urls(),
+            'enable_debug_mode': getattr(self, 'enable_debug_mode', False),
+            'learner_response': getattr(self, 'learner_response', {}),
+            'interaction_count': getattr(self, 'interaction_count', 0),
+            'last_interaction_time': getattr(self, 'last_interaction_time', ''),
         })
 
         # Load the template
@@ -70,19 +92,23 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
         """
         Create the studio view for editing the InteractiveJSBlock
         """
+        # Ensure all fields are properly initialized
+        self.ensure_field_initialization()
+        
         context = context or {}
         context = dict(context)
         
         # Prepare the context for studio editing
         context.update({
-            'display_name': self.display_name,
-            'html_content': self.html_content,
-            'css_content': self.css_content,
-            'js_content': self.js_content,
-            'allowed_external_urls': json.dumps(self.allowed_external_urls),
-            'enable_debug_mode': self.enable_debug_mode,
-            'auto_grade_enabled': self.auto_grade_enabled,
-            'weight': self.weight,
+            'block_id': str(self.location),
+            'display_name': getattr(self, 'display_name', 'Interactive JS Block'),
+            'html_content': getattr(self, 'html_content', ''),
+            'css_content': getattr(self, 'css_content', ''),
+            'js_content': getattr(self, 'js_content', ''),
+            'allowed_external_urls': json.dumps(self.get_allowed_external_urls()),
+            'enable_debug_mode': getattr(self, 'enable_debug_mode', False),
+            'auto_grade_enabled': getattr(self, 'auto_grade_enabled', False),
+            'weight': getattr(self, 'weight', 1),
         })
 
         # Load the studio template

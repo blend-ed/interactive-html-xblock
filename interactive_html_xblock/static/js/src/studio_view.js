@@ -1,6 +1,7 @@
 /* InteractiveJSBlock Studio View JavaScript */
 
 function StudioView(runtime, element) {
+    'use strict';
     
     // Initialize the studio view
     function initializeStudio() {
@@ -17,6 +18,14 @@ function StudioView(runtime, element) {
         
         // Setup test interaction functionality
         setupTestInteraction();
+        
+        // Setup reset functionality
+        setupReset();
+        
+        // Setup accessibility
+        setupAccessibility();
+        
+        console.log('InteractiveJSBlock: Studio view ready');
     }
     
     // Setup tab navigation
@@ -28,12 +37,19 @@ function StudioView(runtime, element) {
             button.addEventListener('click', function() {
                 var targetTab = this.getAttribute('data-tab');
                 
+                // Update ARIA attributes
+                tabButtons.forEach(function(btn) {
+                    btn.setAttribute('aria-selected', 'false');
+                });
+                this.setAttribute('aria-selected', 'true');
+                
                 // Remove active class from all buttons and panes
                 tabButtons.forEach(function(btn) {
                     btn.classList.remove('active');
                 });
                 tabPanes.forEach(function(pane) {
                     pane.classList.remove('active');
+                    pane.style.display = 'none';
                 });
                 
                 // Add active class to clicked button and corresponding pane
@@ -41,6 +57,7 @@ function StudioView(runtime, element) {
                 var targetPane = element.querySelector('#' + targetTab + '-tab');
                 if (targetPane) {
                     targetPane.classList.add('active');
+                    targetPane.style.display = 'block';
                 }
             });
         });
@@ -56,11 +73,9 @@ function StudioView(runtime, element) {
         }
     }
     
-    // Save the block data
+    // Save block data
     function saveBlock() {
-        console.log('InteractiveJSBlock: Saving block data');
-        
-        // Collect form data
+        // Get form data
         var formData = {
             display_name: getFieldValue('display_name'),
             html_content: getFieldValue('html_content'),
@@ -74,14 +89,14 @@ function StudioView(runtime, element) {
         
         // Validate required fields
         if (!formData.html_content.trim()) {
-            alert('HTML content cannot be empty');
+            showError('HTML content cannot be empty');
             return;
         }
         
         // Show loading state
         var saveButton = element.querySelector('#save-button');
-        var originalText = saveButton.textContent;
-        saveButton.textContent = 'Saving...';
+        var originalText = saveButton.querySelector('.btn-text').textContent;
+        saveButton.classList.add('saving');
         saveButton.disabled = true;
         
         // Send data to XBlock
@@ -93,17 +108,15 @@ function StudioView(runtime, element) {
             contentType: "application/json",
             success: function(response) {
                 console.log('InteractiveJSBlock: Save successful', response);
-                saveButton.textContent = 'Saved!';
-                setTimeout(function() {
-                    saveButton.textContent = originalText;
-                    saveButton.disabled = false;
-                }, 2000);
+                saveButton.classList.remove('saving');
+                saveButton.disabled = false;
+                showSuccess('Block saved successfully!');
             },
             error: function(xhr, status, error) {
                 console.error('InteractiveJSBlock: Save failed', error);
-                alert('Failed to save block: ' + error);
-                saveButton.textContent = originalText;
+                saveButton.classList.remove('saving');
                 saveButton.disabled = false;
+                showError('Failed to save block: ' + error);
             }
         });
     }
@@ -130,6 +143,13 @@ function StudioView(runtime, element) {
         // Close modal when clicking outside
         window.addEventListener('click', function(event) {
             if (event.target === modal) {
+                hidePreview();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal.style.display === 'block') {
                 hidePreview();
             }
         });
@@ -163,12 +183,14 @@ function StudioView(runtime, element) {
         
         previewContent.innerHTML = previewHtml;
         modal.style.display = 'block';
+        modal.setAttribute('aria-hidden', 'false');
     }
     
     // Hide preview
     function hidePreview() {
         var modal = element.querySelector('#preview-modal');
         modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
     }
     
     // Setup test interaction functionality
@@ -193,7 +215,114 @@ function StudioView(runtime, element) {
         };
         
         // Show test result
-        alert('Test interaction data: ' + JSON.stringify(testData, null, 2));
+        showSuccess('Test interaction data: ' + JSON.stringify(testData, null, 2));
+    }
+    
+    // Setup reset functionality
+    function setupReset() {
+        var resetButton = element.querySelector('#reset-button');
+        if (resetButton) {
+            resetButton.addEventListener('click', function() {
+                showConfirmDialog('Are you sure you want to reset all fields to their default values?', function() {
+                    resetFields();
+                });
+            });
+        }
+    }
+    
+    // Reset all fields to defaults
+    function resetFields() {
+        // Reset to default values
+        setFieldValue('display_name', 'Interactive JS Block');
+        setFieldValue('html_content', '<div class="interactive-content">\n  <h3>Interactive Content</h3>\n  <p>Add your interactive HTML here.</p>\n</div>');
+        setFieldValue('css_content', '.interactive-content {\n  padding: 20px;\n  border: 1px solid #ccc;\n  border-radius: 5px;\n}');
+        setFieldValue('js_content', '// Example: submitInteraction({ answer: "user input", timeSpent: 30 });\nconsole.log("Interactive JS loaded");');
+        setFieldValue('weight', '1');
+        setCheckboxValue('enable_debug_mode', false);
+        setCheckboxValue('auto_grade_enabled', false);
+        setFieldValue('allowed_external_urls', '[]');
+        
+        showSuccess('Fields reset to default values');
+    }
+    
+    // Setup accessibility
+    function setupAccessibility() {
+        // Add keyboard navigation for tabs
+        var tabButtons = element.querySelectorAll('.tab-button');
+        tabButtons.forEach(function(button, index) {
+            button.addEventListener('keydown', function(event) {
+                if (event.key === 'ArrowRight') {
+                    var nextIndex = (index + 1) % tabButtons.length;
+                    tabButtons[nextIndex].click();
+                    tabButtons[nextIndex].focus();
+                } else if (event.key === 'ArrowLeft') {
+                    var prevIndex = (index - 1 + tabButtons.length) % tabButtons.length;
+                    tabButtons[prevIndex].click();
+                    tabButtons[prevIndex].focus();
+                }
+            });
+        });
+    }
+    
+    // Show confirmation dialog
+    function showConfirmDialog(message, onConfirm) {
+        var modal = element.querySelector('#confirm-modal');
+        var messageElement = modal.querySelector('#confirm-message');
+        var okButton = modal.querySelector('#confirm-ok');
+        var cancelButton = modal.querySelector('#confirm-cancel');
+        
+        messageElement.textContent = message;
+        modal.style.display = 'block';
+        modal.setAttribute('aria-hidden', 'false');
+        
+        // Focus the OK button
+        okButton.focus();
+        
+        // Handle OK button
+        var handleOk = function() {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            okButton.removeEventListener('click', handleOk);
+            cancelButton.removeEventListener('click', handleCancel);
+            onConfirm();
+        };
+        
+        // Handle Cancel button
+        var handleCancel = function() {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            okButton.removeEventListener('click', handleOk);
+            cancelButton.removeEventListener('click', handleCancel);
+        };
+        
+        okButton.addEventListener('click', handleOk);
+        cancelButton.addEventListener('click', handleCancel);
+    }
+    
+    // Show success message
+    function showSuccess(message) {
+        var successElement = element.querySelector('#success-message');
+        if (successElement) {
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            setTimeout(function() {
+                successElement.style.display = 'none';
+            }, 3000);
+        }
+        console.log('Success:', message);
+    }
+    
+    // Show error message
+    function showError(message) {
+        var errorElement = element.querySelector('#error-message');
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            setTimeout(function() {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+        console.error('Error:', message);
     }
     
     // Helper functions
@@ -202,9 +331,23 @@ function StudioView(runtime, element) {
         return field ? field.value : '';
     }
     
+    function setFieldValue(fieldName, value) {
+        var field = element.querySelector('[name="' + fieldName + '"]');
+        if (field) {
+            field.value = value;
+        }
+    }
+    
     function getCheckboxValue(fieldName) {
         var field = element.querySelector('[name="' + fieldName + '"]');
         return field ? field.checked : false;
+    }
+    
+    function setCheckboxValue(fieldName, value) {
+        var field = element.querySelector('[name="' + fieldName + '"]');
+        if (field) {
+            field.checked = value;
+        }
     }
     
     function parseJsonField(fieldName) {
@@ -219,7 +362,6 @@ function StudioView(runtime, element) {
     // Initialize when DOM is ready
     $(function() {
         initializeStudio();
-        console.log('InteractiveJSBlock: Studio view ready');
     });
     
     // Return public methods
@@ -227,6 +369,9 @@ function StudioView(runtime, element) {
         saveBlock: saveBlock,
         showPreview: showPreview,
         hidePreview: hidePreview,
-        testInteraction: testInteraction
+        testInteraction: testInteraction,
+        resetFields: resetFields,
+        showSuccess: showSuccess,
+        showError: showError
     };
 } 

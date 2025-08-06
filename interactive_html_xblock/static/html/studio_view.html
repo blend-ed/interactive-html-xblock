@@ -1,67 +1,82 @@
 {% load i18n %}
-<div class="interactive-js-studio">
+<div class="interactive-js-studio" role="main" aria-label="{% trans 'Interactive JS Block Editor' %}">
+    <!-- Studio Header -->
     <div class="studio-header">
-        <h3>Interactive JS Block Editor</h3>
-        <p>Create interactive content with HTML, CSS, and JavaScript. Use <code>submitInteraction(data)</code> in your JavaScript to capture learner interactions.</p>
+        <h3 class="studio-title">{% trans "Interactive JS Block Editor" %}</h3>
+        <p class="studio-description">
+            {% trans "Create interactive content with HTML, CSS, and JavaScript. Use" %} <code>submitInteraction(data)</code> {% trans "in your JavaScript to capture learner interactions." %}
+        </p>
     </div>
 
+    <!-- Studio Content -->
     <div class="studio-content">
         <!-- Tab Navigation -->
-        <div class="tab-navigation">
-            <button class="tab-button active" data-tab="html">HTML Content</button>
-            <button class="tab-button" data-tab="css">CSS Styles</button>
-            <button class="tab-button" data-tab="js">JavaScript</button>
-            <button class="tab-button" data-tab="settings">Settings</button>
+        <div class="tab-navigation" role="tablist" aria-label="{% trans 'Content tabs' %}">
+            <button class="tab-button active" data-tab="html" role="tab" aria-selected="true" aria-controls="html-tab">
+                {% trans "HTML Content" %}
+            </button>
+            <button class="tab-button" data-tab="css" role="tab" aria-selected="false" aria-controls="css-tab">
+                {% trans "CSS Styles" %}
+            </button>
+            <button class="tab-button" data-tab="js" role="tab" aria-selected="false" aria-controls="js-tab">
+                {% trans "JavaScript" %}
+            </button>
+            <button class="tab-button" data-tab="settings" role="tab" aria-selected="false" aria-controls="settings-tab">
+                {% trans "Settings" %}
+            </button>
         </div>
 
         <!-- Tab Content -->
         <div class="tab-content">
             <!-- HTML Tab -->
-            <div class="tab-pane active" id="html-tab">
+            <div class="tab-pane active" id="html-tab" role="tabpanel" aria-labelledby="html-tab">
                 <div class="field-group">
-                    <label for="html_content">HTML Content:</label>
+                    <label for="html_content" class="field-label">{% trans "HTML Content" %}:</label>
                     <textarea 
                         id="html_content" 
                         name="html_content" 
                         rows="15" 
                         class="code-editor"
-                        placeholder="Enter your HTML content here...">{{ html_content }}</textarea>
-                    <div class="field-help">
-                        <p>Enter the HTML content that will be rendered in the interactive block.</p>
+                        placeholder="{% trans 'Enter your HTML content here...' %}"
+                        aria-describedby="html-help">{{ html_content }}</textarea>
+                    <div class="field-help" id="html-help">
+                        <p>{% trans "Enter the HTML content that will be rendered in the interactive block." %}</p>
                     </div>
                 </div>
             </div>
 
             <!-- CSS Tab -->
-            <div class="tab-pane" id="css-tab">
+            <div class="tab-pane" id="css-tab" role="tabpanel" aria-labelledby="css-tab" style="display: none;">
                 <div class="field-group">
-                    <label for="css_content">CSS Styles:</label>
+                    <label for="css_content" class="field-label">{% trans "CSS Styles" %}:</label>
                     <textarea 
                         id="css_content" 
                         name="css_content" 
                         rows="15" 
                         class="code-editor"
-                        placeholder="Enter your CSS styles here...">{{ css_content }}</textarea>
-                    <div class="field-help">
-                        <p>Enter CSS styles for your interactive content. Styles will be scoped to this block.</p>
+                        placeholder="{% trans 'Enter your CSS styles here...' %}"
+                        aria-describedby="css-help">{{ css_content }}</textarea>
+                    <div class="field-help" id="css-help">
+                        <p>{% trans "Enter CSS styles for your interactive content. Styles will be scoped to this block." %}</p>
                     </div>
                 </div>
             </div>
 
             <!-- JavaScript Tab -->
-            <div class="tab-pane" id="js-tab">
+            <div class="tab-pane" id="js-tab" role="tabpanel" aria-labelledby="js-tab" style="display: none;">
                 <div class="field-group">
-                    <label for="js_content">JavaScript Code:</label>
+                    <label for="js_content" class="field-label">{% trans "JavaScript Code" %}:</label>
                     <textarea 
                         id="js_content" 
                         name="js_content" 
                         rows="15" 
                         class="code-editor"
-                        placeholder="Enter your JavaScript code here...">{{ js_content }}</textarea>
-                    <div class="field-help">
-                        <p>Enter JavaScript code for interactivity. Use <code>submitInteraction(data)</code> to send data to the XBlock.</p>
+                        placeholder="{% trans 'Enter your JavaScript code here...' %}"
+                        aria-describedby="js-help">{{ js_content }}</textarea>
+                    <div class="field-help" id="js-help">
+                        <p>{% trans "Enter JavaScript code for interactivity. Use" %} <code>submitInteraction(data)</code> {% trans "to send data to the XBlock." %}</p>
                         <div class="code-example">
-                            <strong>Example:</strong>
+                            <strong>{% trans "Example" %}:</strong>
                             <pre><code>function submitAnswer(answer) {
   submitInteraction({
     answer: answer,
@@ -76,66 +91,77 @@
             </div>
 
             <!-- Settings Tab -->
-            <div class="tab-pane" id="settings-tab">
+            <div class="tab-pane" id="settings-tab" role="tabpanel" aria-labelledby="settings-tab" style="display: none;">
                 <div class="field-group">
-                    <label for="display_name">Display Name:</label>
+                    <label for="display_name" class="field-label">{% trans "Display Name" %}:</label>
                     <input 
                         type="text" 
                         id="display_name" 
                         name="display_name" 
                         value="{{ display_name }}"
-                        class="text-input" />
+                        class="text-input"
+                        aria-describedby="display-name-help" />
+                    <div class="field-help" id="display-name-help">
+                        <p>{% trans "The name that will be displayed for this block." %}</p>
+                    </div>
                 </div>
 
                 <div class="field-group">
-                    <label for="weight">Weight (for grading):</label>
+                    <label for="weight" class="field-label">{% trans "Weight (for grading)" %}:</label>
                     <input 
                         type="number" 
                         id="weight" 
                         name="weight" 
                         value="{{ weight }}"
                         min="0"
-                        class="number-input" />
+                        class="number-input"
+                        aria-describedby="weight-help" />
+                    <div class="field-help" id="weight-help">
+                        <p>{% trans "The weight of this block for grading purposes." %}</p>
+                    </div>
                 </div>
 
                 <div class="field-group">
-                    <label for="enable_debug_mode">
+                    <label for="enable_debug_mode" class="checkbox-label">
                         <input 
                             type="checkbox" 
                             id="enable_debug_mode" 
                             name="enable_debug_mode"
-                            {% if enable_debug_mode %}checked{% endif %} />
-                        Enable Debug Mode
+                            {% if enable_debug_mode %}checked{% endif %}
+                            aria-describedby="debug-mode-help" />
+                        <span class="checkbox-text">{% trans "Enable Debug Mode" %}</span>
                     </label>
-                    <div class="field-help">
-                        <p>Show debug information and console logs in the student view.</p>
+                    <div class="field-help" id="debug-mode-help">
+                        <p>{% trans "Show debug information and console logs in the student view." %}</p>
                     </div>
                 </div>
 
                 <div class="field-group">
-                    <label for="auto_grade_enabled">
+                    <label for="auto_grade_enabled" class="checkbox-label">
                         <input 
                             type="checkbox" 
                             id="auto_grade_enabled" 
                             name="auto_grade_enabled"
-                            {% if auto_grade_enabled %}checked{% endif %} />
-                        Enable Auto-Grading
+                            {% if auto_grade_enabled %}checked{% endif %}
+                            aria-describedby="auto-grade-help" />
+                        <span class="checkbox-text">{% trans "Enable Auto-Grading" %}</span>
                     </label>
-                    <div class="field-help">
-                        <p>Automatically grade based on interaction data containing 'score', 'grade', or 'correct' fields.</p>
+                    <div class="field-help" id="auto-grade-help">
+                        <p>{% trans "Automatically grade based on interaction data containing 'score', 'grade', or 'correct' fields." %}</p>
                     </div>
                 </div>
 
                 <div class="field-group">
-                    <label for="allowed_external_urls">Allowed External URLs (JSON array):</label>
+                    <label for="allowed_external_urls" class="field-label">{% trans "Allowed External URLs (JSON array)" %}:</label>
                     <textarea 
                         id="allowed_external_urls" 
                         name="allowed_external_urls" 
                         rows="3" 
                         class="code-editor"
-                        placeholder='["https://example.com/style.css", "https://example.com/script.js"]'>{{ allowed_external_urls }}</textarea>
-                    <div class="field-help">
-                        <p>Optional: List of allowed external CSS/JS URLs in JSON array format.</p>
+                        placeholder='["https://example.com/style.css", "https://example.com/script.js"]'
+                        aria-describedby="urls-help">{{ allowed_external_urls }}</textarea>
+                    <div class="field-help" id="urls-help">
+                        <p>{% trans "Optional: List of allowed external CSS/JS URLs in JSON array format." %}</p>
                     </div>
                 </div>
             </div>
@@ -144,17 +170,53 @@
 
     <!-- Action Buttons -->
     <div class="studio-actions">
-        <button class="btn btn-primary" id="save-button">Save</button>
-        <button class="btn btn-secondary" id="preview-button">Preview</button>
-        <button class="btn btn-info" id="test-interaction-button">Test Interaction</button>
+        <button class="btn btn-primary" id="save-button" type="button">
+            <span class="btn-text">{% trans "Save" %}</span>
+            <span class="btn-loading" style="display: none;">{% trans "Saving..." %}</span>
+        </button>
+        <button class="btn btn-secondary" id="preview-button" type="button">
+            {% trans "Preview" %}
+        </button>
+        <button class="btn btn-info" id="test-interaction-button" type="button">
+            {% trans "Test Interaction" %}
+        </button>
+        <button class="btn btn-default" id="reset-button" type="button">
+            {% trans "Reset" %}
+        </button>
+    </div>
+
+    <!-- Status Messages -->
+    <div class="status-messages" role="status" aria-live="polite">
+        <div class="success-message" id="success-message" style="display: none;"></div>
+        <div class="error-message" id="error-message" style="display: none;"></div>
     </div>
 
     <!-- Preview Modal -->
-    <div id="preview-modal" class="modal">
+    <div id="preview-modal" class="modal" role="dialog" aria-labelledby="preview-title" aria-hidden="true">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Preview</h3>
-            <div id="preview-content"></div>
+            <div class="modal-header">
+                <h3 id="preview-title">{% trans "Preview" %}</h3>
+                <button class="close" aria-label="{% trans 'Close preview' %}">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="preview-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal" role="dialog" aria-labelledby="confirm-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirm-title">{% trans "Confirm Action" %}</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="confirm-cancel">{% trans "Cancel" %}</button>
+                <button class="btn btn-primary" id="confirm-ok">{% trans "OK" %}</button>
+            </div>
         </div>
     </div>
 </div> 

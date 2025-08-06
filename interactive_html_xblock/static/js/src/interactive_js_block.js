@@ -1,134 +1,155 @@
 /* InteractiveJSBlock Student View JavaScript */
 
 function InteractiveJSBlockView(runtime, element) {
+    'use strict';
     
-    // Initialize the block
-    function initializeBlock() {
+    // Initialize the student view
+    function initializeStudentView() {
         console.log('InteractiveJSBlock: Initializing student view');
         
-        // Add loading state
-        element.classList.add('loading');
+        // Setup error handling
+        setupErrorHandling();
         
-        // Initialize any existing interactions
-        updateInteractionDisplay();
+        // Setup accessibility features
+        setupAccessibility();
         
-        // Remove loading state
-        setTimeout(function() {
-            element.classList.remove('loading');
-        }, 500);
+        // Setup keyboard navigation
+        setupKeyboardNavigation();
+        
+        // Log initialization
+        console.log('InteractiveJSBlock: Student view ready');
     }
     
-    // Update the interaction display
-    function updateInteractionDisplay() {
-        var interactionCount = element.querySelector('#interaction-count');
-        var lastInteraction = element.querySelector('#last-interaction');
-        var currentResponse = element.querySelector('#current-response');
-        
-        if (interactionCount) {
-            // This will be updated by the XBlockInterface
-            console.log('InteractiveJSBlock: Interaction count element found');
-        }
-        
-        if (lastInteraction) {
-            // This will be updated by the XBlockInterface
-            console.log('InteractiveJSBlock: Last interaction element found');
-        }
-        
-        if (currentResponse) {
-            // This will be updated by the XBlockInterface
-            console.log('InteractiveJSBlock: Current response element found');
-        }
-    }
-    
-    // Handle successful interaction save
-    function handleInteractionSuccess(response) {
-        console.log('InteractiveJSBlock: Interaction saved successfully', response);
-        
-        // Update debug display if available
-        if (window.updateDebugInfo) {
-            window.updateDebugInfo(response);
-        }
-        
-        // Show success state briefly
-        element.classList.add('success');
-        setTimeout(function() {
-            element.classList.remove('success');
-        }, 2000);
-    }
-    
-    // Handle interaction save error
-    function handleInteractionError(error) {
-        console.error('InteractiveJSBlock: Failed to save interaction', error);
-        
-        // Show error state briefly
-        element.classList.add('error');
-        setTimeout(function() {
-            element.classList.remove('error');
-        }, 3000);
-    }
-    
-    // Override the global submitInteraction function to add logging
-    var originalSubmitInteraction = window.submitInteraction;
-    window.submitInteraction = function(data) {
-        console.log('InteractiveJSBlock: submitInteraction called with data:', data);
-        
-        // Call the original function
-        if (originalSubmitInteraction) {
-            originalSubmitInteraction(data);
-        }
-    };
-    
-    // Add event listeners for any interactive elements
-    function setupEventListeners() {
-        // Listen for clicks on interactive elements
-        element.addEventListener('click', function(event) {
-            // Check if the clicked element has a data-interaction attribute
-            var target = event.target;
-            if (target.hasAttribute('data-interaction')) {
-                var interactionData = target.getAttribute('data-interaction');
-                try {
-                    var data = JSON.parse(interactionData);
-                    console.log('InteractiveJSBlock: Auto-interaction detected:', data);
-                    window.submitInteraction(data);
-                } catch (e) {
-                    console.error('InteractiveJSBlock: Invalid interaction data:', interactionData);
-                }
-            }
+    // Setup error handling
+    function setupErrorHandling() {
+        // Global error handler
+        window.addEventListener('error', function(event) {
+            console.error('InteractiveJSBlock: Global error:', event.error);
+            showError('JavaScript error: ' + event.error.message);
         });
         
-        // Listen for form submissions
-        var forms = element.querySelectorAll('form');
-        forms.forEach(function(form) {
-            form.addEventListener('submit', function(event) {
-                // Prevent default form submission
-                event.preventDefault();
-                
-                // Collect form data
-                var formData = new FormData(form);
-                var data = {};
-                for (var [key, value] of formData.entries()) {
-                    data[key] = value;
-                }
-                
-                console.log('InteractiveJSBlock: Form submission detected:', data);
-                window.submitInteraction(data);
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('InteractiveJSBlock: Unhandled promise rejection:', event.reason);
+            showError('Promise error: ' + event.reason);
+        });
+    }
+    
+    // Setup accessibility features
+    function setupAccessibility() {
+        // Add ARIA labels and roles
+        var block = element.querySelector('.interactive-js-block');
+        if (block) {
+            block.setAttribute('role', 'region');
+            block.setAttribute('aria-label', 'Interactive content block');
+        }
+        
+        // Add focus management
+        var focusableElements = element.querySelectorAll('button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+        focusableElements.forEach(function(el) {
+            el.addEventListener('focus', function() {
+                this.classList.add('focused');
+            });
+            
+            el.addEventListener('blur', function() {
+                this.classList.remove('focused');
             });
         });
     }
     
-    // Initialize when DOM is ready
-    $(function() {
-        initializeBlock();
-        setupEventListeners();
-        
-        // Log that the block is ready
-        console.log('InteractiveJSBlock: Student view ready');
-    });
+    // Setup keyboard navigation
+    function setupKeyboardNavigation() {
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+Enter to submit interaction (if available)
+            if (event.ctrlKey && event.key === 'Enter') {
+                var submitButton = element.querySelector('[data-action="submit"]');
+                if (submitButton) {
+                    submitButton.click();
+                }
+            }
+        });
+    }
     
-    // Return any public methods if needed
+    // Show error message
+    function showError(message) {
+        var errorDisplay = element.querySelector('#error-display');
+        var errorMessage = errorDisplay ? errorDisplay.querySelector('.error-message') : null;
+        
+        if (errorDisplay && errorMessage) {
+            errorMessage.textContent = message;
+            errorDisplay.style.display = 'block';
+            
+            // Announce to screen readers
+            errorDisplay.setAttribute('aria-live', 'polite');
+            
+            // Hide after 5 seconds
+            setTimeout(function() {
+                errorDisplay.style.display = 'none';
+            }, 5000);
+        }
+        
+        console.error('InteractiveJSBlock Error:', message);
+    }
+    
+    // Show success message
+    function showSuccess(message) {
+        console.log('InteractiveJSBlock Success:', message);
+        
+        // You can implement a success notification here
+        // For now, we'll just log it
+    }
+    
+    // Update debug information
+    function updateDebugInfo(response) {
+        var countElement = element.querySelector('#interaction-count');
+        var countDebugElement = element.querySelector('#interaction-count-debug');
+        var lastElement = element.querySelector('#last-interaction');
+        var lastDebugElement = element.querySelector('#last-interaction-debug');
+        
+        if (countElement) {
+            countElement.textContent = response.interaction_count;
+        }
+        if (countDebugElement) {
+            countDebugElement.textContent = response.interaction_count;
+        }
+        if (lastElement) {
+            lastElement.textContent = new Date().toISOString();
+        }
+        if (lastDebugElement) {
+            lastDebugElement.textContent = new Date().toISOString();
+        }
+    }
+    
+    // Show loading state
+    function showLoading(show) {
+        var indicator = element.querySelector('#loading-indicator');
+        if (indicator) {
+            indicator.style.display = show ? 'block' : 'none';
+        }
+        
+        var block = element.querySelector('.interactive-js-block');
+        if (block) {
+            if (show) {
+                block.classList.add('loading');
+            } else {
+                block.classList.remove('loading');
+            }
+        }
+    }
+    
+    // Public API
     return {
-        updateInteractionDisplay: updateInteractionDisplay,
-        handleInteractionSuccess: handleInteractionSuccess,
-        handleInteractionError: handleInteractionError
+        showError: showError,
+        showSuccess: showSuccess,
+        showLoading: showLoading,
+        updateDebugInfo: updateDebugInfo
     };
-} 
+}
+
+// Initialize when DOM is ready
+$(function() {
+    // The actual initialization is handled by the XBlock framework
+    // This is just a fallback
+    console.log('InteractiveJSBlock: Student view script loaded');
+}); 

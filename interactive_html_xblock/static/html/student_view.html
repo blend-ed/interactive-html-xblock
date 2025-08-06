@@ -1,67 +1,156 @@
 {% load i18n %}
-<div class="interactive-js-block" data-block-id="{{ block_id }}">
+<div class="interactive-js-block" data-block-id="{{ block_id }}" role="region" aria-label="{{ display_name }}">
+    <!-- Header Section -->
     <div class="interactive-js-header">
-        <h3>{{ display_name }}</h3>
+        <h3 class="interactive-js-title">{{ display_name }}</h3>
         {% if enable_debug_mode %}
-        <div class="debug-info">
-            <small>Interactions: {{ interaction_count }} | Last: {{ last_interaction_time|default:"None" }}</small>
+        <div class="debug-info" role="status" aria-live="polite">
+            <small>
+                <span class="debug-label">{% trans "Interactions" %}:</span> 
+                <span class="debug-value" id="interaction-count">{{ interaction_count }}</span> | 
+                <span class="debug-label">{% trans "Last" %}:</span> 
+                <span class="debug-value" id="last-interaction">{{ last_interaction_time|default:"None" }}</span>
+            </small>
         </div>
         {% endif %}
     </div>
 
+    <!-- Main Content Section -->
     <div class="interactive-js-content">
         <!-- Author's HTML content -->
-        <div class="author-html">
+        <div class="author-html" id="author-content">
             {{ html_content|safe }}
+        </div>
+        
+        <!-- Loading indicator -->
+        <div class="loading-indicator" id="loading-indicator" style="display: none;">
+            <div class="spinner"></div>
+            <span>{% trans "Processing..." %}</span>
+        </div>
+        
+        <!-- Error display -->
+        <div class="error-display" id="error-display" style="display: none;" role="alert">
+            <span class="error-message"></span>
         </div>
     </div>
 
-    <!-- Debug panel (only shown in debug mode) -->
+    <!-- Debug Panel (only shown in debug mode) -->
     {% if enable_debug_mode %}
-    <div class="debug-panel">
-        <h4>Debug Information</h4>
+    <div class="debug-panel" role="complementary" aria-label="{% trans 'Debug Information' %}">
+        <h4 class="debug-panel-title">{% trans "Debug Information" %}</h4>
         <div class="debug-section">
-            <strong>Current Response:</strong>
-            <pre id="current-response">{{ learner_response|default:"{}" }}</pre>
+            <strong>{% trans "Current Response" %}:</strong>
+            <pre id="current-response" class="debug-pre">{{ learner_response|default:"{}" }}</pre>
         </div>
         <div class="debug-section">
-            <strong>Interaction Count:</strong> <span id="interaction-count">{{ interaction_count }}</span>
+            <strong>{% trans "Interaction Count" %}:</strong> 
+            <span id="interaction-count-debug">{{ interaction_count }}</span>
         </div>
         <div class="debug-section">
-            <strong>Last Interaction:</strong> <span id="last-interaction">{{ last_interaction_time|default:"None" }}</span>
+            <strong>{% trans "Last Interaction" %}:</strong> 
+            <span id="last-interaction-debug">{{ last_interaction_time|default:"None" }}</span>
+        </div>
+        <div class="debug-section">
+            <strong>{% trans "Block ID" %}:</strong> 
+            <span>{{ block_id }}</span>
         </div>
     </div>
     {% endif %}
 
-    <!-- XBlockInterface for JavaScript communication -->
+    <!-- XBlock Interface for JavaScript Communication -->
     <script type="text/javascript">
         (function() {
+            'use strict';
+            
+            // Ensure we have the runtime
+            if (typeof runtime === 'undefined') {
+                console.error('InteractiveJSBlock: runtime not available');
+                return;
+            }
+            
             // Create the XBlockInterface for safe JS → XBlock communication
             window.XBlockInterface = {
                 postMessage: function({ type, payload }) {
                     if (type === 'interaction') {
-                        // Send data to backend
-                        var handlerUrl = runtime.handlerUrl(element, 'save_interaction');
-                        $.ajax({
-                            type: "POST",
-                            url: handlerUrl,
-                            data: JSON.stringify(payload),
-                            contentType: "application/json",
-                            success: function(response) {
-                                if (response.status === 'ok') {
-                                    console.log('Interaction saved:', response.message);
-                                    // Update debug info if available
-                                    if (window.updateDebugInfo) {
-                                        window.updateDebugInfo(response);
-                                    }
-                                } else {
-                                    console.error('Failed to save interaction:', response.message);
-                                }
-                            },
-                            error: function(xhr, status, error) {
-                                console.error('Error saving interaction:', error);
+                        this.saveInteraction(payload);
+                    } else if (type === 'error') {
+                        this.showError(payload);
+                    }
+                },
+                
+                saveInteraction: function(data) {
+                    var self = this;
+                    var handlerUrl = runtime.handlerUrl(element, 'save_interaction');
+                    
+                    // Show loading indicator
+                    this.showLoading(true);
+                    
+                    $.ajax({
+                        type: "POST",
+                        url: handlerUrl,
+                        data: JSON.stringify(data),
+                        contentType: "application/json",
+                        success: function(response) {
+                            self.showLoading(false);
+                            if (response.status === 'ok') {
+                                console.log('Interaction saved:', response.message);
+                                self.updateDebugInfo(response);
+                                self.showSuccess('Interaction saved successfully');
+                            } else {
+                                console.error('Failed to save interaction:', response.message);
+                                self.showError(response.message || 'Failed to save interaction');
                             }
-                        });
+                        },
+                        error: function(xhr, status, error) {
+                            self.showLoading(false);
+                            console.error('Error saving interaction:', error);
+                            self.showError('Network error: ' + error);
+                        }
+                    });
+                },
+                
+                showLoading: function(show) {
+                    var indicator = document.getElementById('loading-indicator');
+                    if (indicator) {
+                        indicator.style.display = show ? 'block' : 'none';
+                    }
+                },
+                
+                showError: function(message) {
+                    var errorDisplay = document.getElementById('error-display');
+                    var errorMessage = errorDisplay.querySelector('.error-message');
+                    if (errorDisplay && errorMessage) {
+                        errorMessage.textContent = message;
+                        errorDisplay.style.display = 'block';
+                        // Hide after 5 seconds
+                        setTimeout(function() {
+                            errorDisplay.style.display = 'none';
+                        }, 5000);
+                    }
+                },
+                
+                showSuccess: function(message) {
+                    // You can implement a success notification here
+                    console.log('Success:', message);
+                },
+                
+                updateDebugInfo: function(response) {
+                    var countElement = document.getElementById('interaction-count');
+                    var countDebugElement = document.getElementById('interaction-count-debug');
+                    var lastElement = document.getElementById('last-interaction');
+                    var lastDebugElement = document.getElementById('last-interaction-debug');
+                    
+                    if (countElement) {
+                        countElement.textContent = response.interaction_count;
+                    }
+                    if (countDebugElement) {
+                        countDebugElement.textContent = response.interaction_count;
+                    }
+                    if (lastElement) {
+                        lastElement.textContent = new Date().toISOString();
+                    }
+                    if (lastDebugElement) {
+                        lastDebugElement.textContent = new Date().toISOString();
                     }
                 }
             };
@@ -70,6 +159,7 @@
             window.submitInteraction = function(data) {
                 if (!data || typeof data !== 'object') {
                     console.error('submitInteraction: data must be a JSON object');
+                    window.XBlockInterface.showError('Invalid data format');
                     return;
                 }
                 
@@ -78,6 +168,10 @@
                     data.timestamp = new Date().toISOString();
                 }
                 
+                // Add block context
+                data.block_id = '{{ block_id }}';
+                data.display_name = '{{ display_name }}';
+                
                 // Send via XBlockInterface
                 window.XBlockInterface.postMessage({
                     type: 'interaction',
@@ -85,21 +179,14 @@
                 });
             };
 
-            // Debug helper function
-            window.updateDebugInfo = function(response) {
-                var countElement = document.getElementById('interaction-count');
-                if (countElement) {
-                    countElement.textContent = response.interaction_count;
-                }
-                
-                var lastElement = document.getElementById('last-interaction');
-                if (lastElement) {
-                    lastElement.textContent = new Date().toISOString();
-                }
-            };
+            // Error handling for author's JavaScript
+            window.addEventListener('error', function(event) {
+                console.error('InteractiveJSBlock: JavaScript error in author code:', event.error);
+                window.XBlockInterface.showError('JavaScript error: ' + event.error.message);
+            });
 
             // Log when interface is ready
-            console.log('InteractiveJSBlock: XBlockInterface ready');
+            console.log('InteractiveJSBlock: XBlockInterface ready for block {{ block_id }}');
         })();
     </script>
 
@@ -110,6 +197,11 @@
 
     <!-- Author's JavaScript content -->
     <script type="text/javascript">
-        {{ js_content|safe }}
+        try {
+            {{ js_content|safe }}
+        } catch (error) {
+            console.error('InteractiveJSBlock: Error in author JavaScript:', error);
+            window.XBlockInterface.showError('JavaScript error: ' + error.message);
+        }
     </script>
 </div> 

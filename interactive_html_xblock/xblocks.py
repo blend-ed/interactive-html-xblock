@@ -29,6 +29,15 @@ class InteractiveJSBlock(
     grading, or state restoration.
     """
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the InteractiveJSBlock
+        """
+        super().__init__(*args, **kwargs)
+        # Ensure fields are properly initialized
+        if hasattr(self, 'ensure_field_initialization'):
+            self.ensure_field_initialization()
+
     @staticmethod
     def workbench_scenarios():
         """Create canned scenarios for display in the workbench."""

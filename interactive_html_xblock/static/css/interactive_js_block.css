@@ -7,6 +7,7 @@
     border-radius: 8px;
     background: #ffffff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 .interactive-js-header {
@@ -16,7 +17,7 @@
     border-radius: 8px 8px 0 0;
 }
 
-.interactive-js-header h3 {
+.interactive-js-title {
     margin: 0 0 5px 0;
     color: #2c3e50;
     font-size: 1.2em;
@@ -28,13 +29,69 @@
     color: #6c757d;
 }
 
+.debug-label {
+    font-weight: 500;
+}
+
+.debug-value {
+    font-weight: 600;
+    color: #495057;
+}
+
 .interactive-js-content {
     padding: 20px;
+    position: relative;
 }
 
 .author-html {
     /* Author's HTML content will be rendered here */
     min-height: 50px;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 8px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error Display */
+.error-display {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 10px 0;
+    color: #721c24;
+    font-size: 0.9em;
+}
+
+.error-message {
+    font-weight: 500;
 }
 
 /* Debug Panel Styles */
@@ -47,7 +104,7 @@
     font-size: 0.9em;
 }
 
-.debug-panel h4 {
+.debug-panel-title {
     margin: 0 0 10px 0;
     color: #495057;
     font-size: 1em;
@@ -62,7 +119,7 @@
     color: #495057;
 }
 
-.debug-section pre {
+.debug-pre {
     background: #ffffff;
     border: 1px solid #dee2e6;
     border-radius: 3px;
@@ -72,6 +129,54 @@
     overflow-x: auto;
     max-height: 100px;
     overflow-y: auto;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* Success State */
+.interactive-js-block.success {
+    border-color: #28a745;
+}
+
+.interactive-js-block.success .interactive-js-header {
+    background: #d4edda;
+    border-bottom-color: #28a745;
+}
+
+/* Error State */
+.interactive-js-block.error {
+    border-color: #dc3545;
+    background: #fff5f5;
+}
+
+.interactive-js-block.error .interactive-js-header {
+    background: #f8d7da;
+    border-bottom-color: #dc3545;
+}
+
+/* Loading State */
+.interactive-js-block.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.interactive-js-block.loading::after {
+    content: "Loading...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    z-index: 20;
+}
+
+/* Focus styles for accessibility */
+.interactive-js-block:focus-within {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
 }
 
 /* Responsive Design */
@@ -93,44 +198,34 @@
         margin-top: 15px;
         padding: 10px;
     }
+    
+    .loading-indicator {
+        padding: 20px;
+    }
 }
 
-/* Loading State */
-.interactive-js-block.loading {
-    opacity: 0.7;
-    pointer-events: none;
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .interactive-js-block {
+        border-width: 2px;
+    }
+    
+    .debug-panel {
+        border-width: 2px;
+    }
+    
+    .error-display {
+        border-width: 2px;
+    }
 }
 
-.interactive-js-block.loading::after {
-    content: "Loading...";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-size: 0.9em;
-}
-
-/* Error State */
-.interactive-js-block.error {
-    border-color: #dc3545;
-    background: #fff5f5;
-}
-
-.interactive-js-block.error .interactive-js-header {
-    background: #f8d7da;
-    border-bottom-color: #dc3545;
-}
-
-/* Success State */
-.interactive-js-block.success {
-    border-color: #28a745;
-}
-
-.interactive-js-block.success .interactive-js-header {
-    background: #d4edda;
-    border-bottom-color: #28a745;
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation: none;
+    }
+    
+    .interactive-js-block.loading::after {
+        animation: none;
+    }
 } 
