@@ -116,13 +116,27 @@ To develop this xblock with Tutor:
 
        tutor mounts add /path/to/interactive-html-xblock
 
-4. Build the development image:
+4. Create a new tutor plugin to add additional mounting configuration (touch $(tutor plugins printroot)/mount_interactive_html_xblock.py):
+
+   .. code-block:: python
+
+       from tutor import hooks
+
+       hooks.Filters.MOUNTED_DIRECTORIES.add_item(("openedx", "interactive_html_xblock"))
+
+5. Enable the plugin:
+
+   .. code-block:: bash
+
+       tutor plugins enable mount_interactive_html_xblock
+
+6. Build the development image:
 
    .. code-block:: bash
 
        tutor images build openedx-dev
 
-5. Start the development environment:
+6. Start the development environment:
 
    .. code-block:: bash
 
