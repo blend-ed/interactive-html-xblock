@@ -43,6 +43,14 @@
     
     <li class="field comp-setting-entry is-set">
       <div class="wrapper-comp-setting">
+        <label class="label setting-label" for="xb_correct_answers">{% trans "Correct Answers (JSON)" %}</label>
+        <textarea class="input setting-input" name="xb_correct_answers" id="xb_correct_answers" rows="8">{{ correct_answers }}</textarea>
+      </div>
+      <span class="tip setting-help">{% trans "JSON object defining correct answers for auto-grading. Example: {'answer': '4', 'correct_feedback': 'Great job!', 'incorrect_feedback': 'Try again.'}" %}</span>
+    </li>
+    
+    <li class="field comp-setting-entry is-set">
+      <div class="wrapper-comp-setting">
         <label class="label setting-label" for="xb_enable_debug_mode">
           <input type="checkbox" name="xb_enable_debug_mode" id="xb_enable_debug_mode" {% if enable_debug_mode %}checked{% endif %} />
           {% trans "Enable Debug Mode" %}
@@ -59,6 +67,36 @@
         </label>
       </div>
       <span class="tip setting-help">{% trans "Enable automatic grading based on interaction data" %}</span>
+    </li>
+    
+    <li class="field comp-setting-entry is-set">
+      <div class="wrapper-comp-setting">
+        <label class="label setting-label" for="xb_show_feedback_to_learners">
+          <input type="checkbox" name="xb_show_feedback_to_learners" id="xb_show_feedback_to_learners" {% if show_feedback_to_learners %}checked{% endif %} />
+          {% trans "Show Feedback to Learners" %}
+        </label>
+      </div>
+      <span class="tip setting-help">{% trans "Show correct/incorrect feedback to learners" %}</span>
+    </li>
+    
+    <li class="field comp-setting-entry is-set">
+      <div class="wrapper-comp-setting">
+        <label class="label setting-label" for="xb_show_previous_response">
+          <input type="checkbox" name="xb_show_previous_response" id="xb_show_previous_response" {% if show_previous_response %}checked{% endif %} />
+          {% trans "Show Previous Response" %}
+        </label>
+      </div>
+      <span class="tip setting-help">{% trans "Show learner their previous response when they return" %}</span>
+    </li>
+    
+    <li class="field comp-setting-entry is-set">
+      <div class="wrapper-comp-setting">
+        <label class="label setting-label" for="xb_enable_instructor_view">
+          <input type="checkbox" name="xb_enable_instructor_view" id="xb_enable_instructor_view" {% if enable_instructor_view %}checked{% endif %} />
+          {% trans "Enable Instructor View" %}
+        </label>
+      </div>
+      <span class="tip setting-help">{% trans "Enable instructor dashboard view for this block" %}</span>
     </li>
   </ul>
   

@@ -2,7 +2,7 @@
 Handle data access logic for the InteractiveJSBlock
 """
 from django.utils.translation import gettext_lazy as _
-from xblock.fields import Boolean, JSONField, List, Scope, String, Integer
+from xblock.fields import Boolean, JSONField, List, Scope, String, Integer, Float
 
 
 class InteractiveJSBlockModelMixin(object):
@@ -72,6 +72,35 @@ class InteractiveJSBlockModelMixin(object):
         scope=Scope.content,
     )
 
+    # New fields for correct answers and feedback
+    correct_answers = JSONField(
+        display_name=_('Correct Answers'),
+        help=_('JSON object defining correct answers for auto-grading'),
+        default={},
+        scope=Scope.content,
+    )
+
+    show_feedback_to_learners = Boolean(
+        display_name=_('Show Feedback to Learners'),
+        help=_('Show correct/incorrect feedback to learners'),
+        default=True,
+        scope=Scope.content,
+    )
+
+    show_previous_response = Boolean(
+        display_name=_('Show Previous Response'),
+        help=_('Show learner their previous response when they return'),
+        default=True,
+        scope=Scope.content,
+    )
+
+    enable_instructor_view = Boolean(
+        display_name=_('Enable Instructor View'),
+        help=_('Enable instructor dashboard view for this block'),
+        default=True,
+        scope=Scope.content,
+    )
+
     # Learner data fields
     learner_response = JSONField(
         help=_('Captured learner interaction data'),
@@ -91,6 +120,25 @@ class InteractiveJSBlockModelMixin(object):
         scope=Scope.user_state,
     )
 
+    # New learner state fields
+    is_correct = Boolean(
+        help=_('Whether the learner response is correct'),
+        default=False,
+        scope=Scope.user_state,
+    )
+
+    score = Float(
+        help=_('Score for the learner response'),
+        default=0.0,
+        scope=Scope.user_state,
+    )
+
+    feedback_message = String(
+        help=_('Feedback message shown to learner'),
+        default='',
+        scope=Scope.user_state,
+    )
+
     # XBlock configuration
     has_score = True
     show_in_read_only_mode = True
@@ -99,66 +147,53 @@ class InteractiveJSBlockModelMixin(object):
         """
         Ensure allowed_external_urls is always a list
         """
-        try:
-            urls = getattr(self, 'allowed_external_urls', None)
-            if urls is None:
-                return []
-            if not isinstance(urls, list):
-                # Try to convert to list if it's not already
-                if hasattr(urls, '__iter__') and not isinstance(urls, str):
-                    return list(urls)
-                return []
-            return urls
-        except Exception:
-            # If anything goes wrong, return empty list
+        urls = getattr(self, 'allowed_external_urls', [])
+        if urls is None:
             return []
+        return urls
 
     def ensure_field_initialization(self):
         """
         Ensure all fields are properly initialized
         """
-        try:
-            if not hasattr(self, 'allowed_external_urls') or self.allowed_external_urls is None:
-                self.allowed_external_urls = []
-            if not hasattr(self, 'learner_response') or self.learner_response is None:
-                self.learner_response = {}
-            if not hasattr(self, 'interaction_count') or self.interaction_count is None:
-                self.interaction_count = 0
-            if not hasattr(self, 'last_interaction_time') or self.last_interaction_time is None:
-                self.last_interaction_time = ''
-        except Exception as e:
-            # Log the error but don't fail initialization
-            import logging
-            log = logging.getLogger(__name__)
-            log.warning("Error during field initialization: %s", str(e))
+        # Initialize fields that might be None
+        if not hasattr(self, 'learner_response') or self.learner_response is None:
+            self.learner_response = {}
+        
+        if not hasattr(self, 'interaction_count') or self.interaction_count is None:
+            self.interaction_count = 0
+            
+        if not hasattr(self, 'last_interaction_time') or self.last_interaction_time is None:
+            self.last_interaction_time = ''
+            
+        if not hasattr(self, 'is_correct') or self.is_correct is None:
+            self.is_correct = False
+            
+        if not hasattr(self, 'score') or self.score is None:
+            self.score = 0.0
+            
+        if not hasattr(self, 'feedback_message') or self.feedback_message is None:
+            self.feedback_message = ''
 
-    def max_score(self):
+    def is_staff(self):
         """
-        Returns the configured number of possible points for this component.
+        Return True if the current user is staff
         """
-        return self.weight
+        if hasattr(self, "xmodule_runtime") and \
+           hasattr(self.xmodule_runtime, "user_is_staff"):
+            return self.xmodule_runtime.user_is_staff
+        else:
+            # In workbench and similar settings, always return true
+            return True
 
     def get_score(self):
         """
-        Get the current score for this XBlock.
+        Return the current score
         """
-        if hasattr(self, 'score'):
-            return self.score
-        return 0.0
+        return self.score
 
-    def set_score(self, score):
+    def max_score(self):
         """
-        Set the score for this XBlock.
+        Return the maximum possible score
         """
-        self.score = score
-        try:
-            self.runtime.publish(
-                self,
-                'grade',
-                {
-                    'value': self.score,
-                    'max_value': self.max_score()
-                }
-            )
-        except Exception:
-            pass  # Handle gracefully if runtime doesn't support publishing 
+        return self.weight 

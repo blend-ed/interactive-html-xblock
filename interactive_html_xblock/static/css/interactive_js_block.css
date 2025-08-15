@@ -48,6 +48,103 @@
     min-height: 50px;
 }
 
+/* Previous Response Display */
+.previous-response {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #f8f9fa;
+}
+
+.previous-response h4 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.response-data {
+    margin-bottom: 15px;
+}
+
+.response-data pre {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 0.9em;
+    overflow-x: auto;
+    margin: 0;
+}
+
+/* Feedback Display */
+.feedback-display {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.feedback-status {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.feedback-status.correct {
+    color: #155724;
+    background: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.feedback-status.incorrect {
+    color: #721c24;
+    background: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.status-icon {
+    font-size: 1.2em;
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+.status-text {
+    font-size: 1em;
+}
+
+.score-display {
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+.score-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.score-value {
+    font-weight: 700;
+    color: #007bff;
+    margin-left: 5px;
+}
+
+.feedback-message {
+    font-size: 0.95em;
+}
+
+.message-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.message-text {
+    margin-left: 5px;
+    color: #212529;
+}
+
 /* Loading Indicator */
 .loading-indicator {
     position: absolute;
@@ -100,36 +197,70 @@
     padding: 15px;
     background: #f8f9fa;
     border: 1px solid #dee2e6;
-    border-radius: 4px;
-    font-size: 0.9em;
+    border-radius: 6px;
 }
 
 .debug-panel-title {
-    margin: 0 0 10px 0;
+    margin: 0 0 15px 0;
     color: #495057;
-    font-size: 1em;
+    font-size: 1.1em;
     font-weight: 600;
 }
 
 .debug-section {
     margin-bottom: 10px;
+    font-size: 0.9em;
 }
 
 .debug-section strong {
     color: #495057;
+    margin-right: 5px;
 }
 
 .debug-pre {
     background: #ffffff;
     border: 1px solid #dee2e6;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 8px;
-    margin: 5px 0;
-    font-size: 0.8em;
+    font-size: 0.85em;
     overflow-x: auto;
-    max-height: 100px;
-    overflow-y: auto;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    margin: 5px 0 0 0;
+}
+
+/* Staff Panel Styles */
+.staff-panel {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 6px;
+}
+
+.staff-panel-title {
+    margin: 0 0 15px 0;
+    color: #1565c0;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.staff-section {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+.staff-section strong {
+    color: #1565c0;
+    margin-right: 5px;
+}
+
+.staff-pre {
+    background: #ffffff;
+    border: 1px solid #bbdefb;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 0.85em;
+    overflow-x: auto;
+    margin: 5px 0 0 0;
 }
 
 /* Success State */
@@ -194,13 +325,22 @@
         padding: 15px;
     }
     
-    .debug-panel {
+    .debug-panel,
+    .staff-panel {
         margin-top: 15px;
         padding: 10px;
     }
     
     .loading-indicator {
         padding: 20px;
+    }
+    
+    .previous-response {
+        padding: 10px;
+    }
+    
+    .feedback-display {
+        padding: 10px;
     }
 }
 
@@ -210,11 +350,16 @@
         border-width: 2px;
     }
     
-    .debug-panel {
+    .debug-panel,
+    .staff-panel {
         border-width: 2px;
     }
     
     .error-display {
+        border-width: 2px;
+    }
+    
+    .feedback-display {
         border-width: 2px;
     }
 }

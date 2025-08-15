@@ -1,0 +1,109 @@
+{% load i18n %}
+
+<div class="interactive-js-instructor-wrapper">
+    <h2>{% trans "Interactive JS Blocks" %}</h2>
+    
+    {% if blocks %}
+        <div class="blocks-summary">
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-label">{% trans "Total Blocks" %}:</span>
+                    <span class="stat-value">{{ blocks|length }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">{% trans "Total Interactions" %}:</span>
+                    <span class="stat-value">{{ blocks|sum:"total_interactions" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="blocks-list">
+            {% for block in blocks %}
+            <div class="block-item">
+                <div class="block-header">
+                    <h3 class="block-title">{{ block.display_name }}</h3>
+                    <div class="block-location">
+                        <span class="location-item">{{ block.section_display_name }}</span>
+                        <span class="location-separator">→</span>
+                        <span class="location-item">{{ block.subsection_display_name }}</span>
+                        <span class="location-separator">→</span>
+                        <span class="location-item">{{ block.unit_display_name }}</span>
+                    </div>
+                    <a href="{{ block.url }}" class="block-link" target="_blank">{% trans "View Block" %}</a>
+                </div>
+                
+                <div class="block-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ block.total_interactions }}</div>
+                        <div class="stat-label">{% trans "Total Interactions" %}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ block.correct_interactions }}</div>
+                        <div class="stat-label">{% trans "Correct Responses" %}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ block.average_score|floatformat:1 }}</div>
+                        <div class="stat-label">{% trans "Average Score" %}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">
+                            {% if block.total_interactions > 0 %}
+                                {{ block.correct_interactions|div:block.total_interactions|mul:100|floatformat:1 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">{% trans "Success Rate" %}</div>
+                    </div>
+                </div>
+                
+                {% if block.interactions %}
+                <div class="interactions-list">
+                    <h4>{% trans "Recent Interactions" %}</h4>
+                    <div class="interactions-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Student" %}</th>
+                                    <th>{% trans "Response" %}</th>
+                                    <th>{% trans "Score" %}</th>
+                                    <th>{% trans "Correct" %}</th>
+                                    <th>{% trans "Last Interaction" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for interaction in block.interactions|slice:":10" %}
+                                <tr class="interaction-row {% if interaction.is_correct %}correct{% else %}incorrect{% endif %}">
+                                    <td class="student-name">{{ interaction.username }}</td>
+                                    <td class="response-data">
+                                        <pre>{{ interaction.learner_response|pprint }}</pre>
+                                    </td>
+                                    <td class="score">{{ interaction.score }}</td>
+                                    <td class="correct-status">
+                                        {% if interaction.is_correct %}
+                                            <span class="status-correct">✓</span>
+                                        {% else %}
+                                            <span class="status-incorrect">✗</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="last-interaction">{{ interaction.last_interaction_time|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="no-interactions">
+                    <p>{% trans "No interactions recorded for this block yet." %}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-blocks">
+            <p>{% trans "No Interactive JS Blocks found in this course." %}</p>
+        </div>
+    {% endif %}
+</div>

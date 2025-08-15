@@ -13,6 +13,10 @@ function StudioView(runtime, element) {
             weight: parseInt($(element).find('input[name=xb_weight]').val()) || 1,
             enable_debug_mode: $(element).find('input[name=xb_enable_debug_mode]').is(':checked'),
             auto_grade_enabled: $(element).find('input[name=xb_auto_grade_enabled]').is(':checked'),
+            correct_answers: $(element).find('textarea[name=xb_correct_answers]').val(),
+            show_feedback_to_learners: $(element).find('input[name=xb_show_feedback_to_learners]').is(':checked'),
+            show_previous_response: $(element).find('input[name=xb_show_previous_response]').is(':checked'),
+            enable_instructor_view: $(element).find('input[name=xb_enable_instructor_view]').is(':checked'),
             allowed_external_urls: []
         };
         
@@ -20,6 +24,16 @@ function StudioView(runtime, element) {
         if (!formData.html_content.trim()) {
             alert('HTML content cannot be empty');
             return;
+        }
+        
+        // Validate correct_answers JSON if auto-grading is enabled
+        if (formData.auto_grade_enabled && formData.correct_answers.trim()) {
+            try {
+                JSON.parse(formData.correct_answers);
+            } catch (e) {
+                alert('Correct Answers must be valid JSON format');
+                return;
+            }
         }
         
         // Show loading state

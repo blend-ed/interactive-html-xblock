@@ -4,6 +4,34 @@
 <div class="interactive-js-block" data-block-id="{{ block_id }}" role="region" aria-label="{{ display_name }}">
     <!-- Main Content Section -->
     <div class="interactive-js-content">
+        <!-- Previous Response Display -->
+        {% if show_previous_response and learner_response %}
+        <div class="previous-response" id="previous-response">
+            <h4>{% trans "Your Previous Response" %}</h4>
+            <div class="response-data">
+                <pre>{{ learner_response|pprint }}</pre>
+            </div>
+            {% if show_feedback_to_learners %}
+            <div class="feedback-display">
+                <div class="feedback-status {% if is_correct %}correct{% else %}incorrect{% endif %}">
+                    <span class="status-icon">{% if is_correct %}✓{% else %}✗{% endif %}</span>
+                    <span class="status-text">{% if is_correct %}{% trans "Correct" %}{% else %}{% trans "Incorrect" %}{% endif %}</span>
+                </div>
+                <div class="score-display">
+                    <span class="score-label">{% trans "Score" %}:</span>
+                    <span class="score-value">{{ score }}/{{ weight }}</span>
+                </div>
+                {% if feedback_message %}
+                <div class="feedback-message">
+                    <span class="message-label">{% trans "Feedback" %}:</span>
+                    <span class="message-text">{{ feedback_message }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <!-- Author's HTML content -->
         <div class="author-html" id="author-content">
             {{ html_content|safe }}
@@ -18,6 +46,22 @@
         <!-- Error display -->
         <div class="error-display" id="error-display" style="display: none;" role="alert">
             <span class="error-message"></span>
+        </div>
+
+        <!-- Feedback display for new responses -->
+        <div class="feedback-display" id="feedback-display" style="display: none;" role="alert">
+            <div class="feedback-status" id="feedback-status">
+                <span class="status-icon" id="status-icon"></span>
+                <span class="status-text" id="status-text"></span>
+            </div>
+            <div class="score-display" id="score-display">
+                <span class="score-label">{% trans "Score" %}:</span>
+                <span class="score-value" id="score-value"></span>
+            </div>
+            <div class="feedback-message" id="feedback-message-container">
+                <span class="message-label">{% trans "Feedback" %}:</span>
+                <span class="message-text" id="feedback-message-text"></span>
+            </div>
         </div>
     </div>
 
@@ -38,8 +82,47 @@
             <span id="last-interaction-debug">{{ last_interaction_time|default:"None" }}</span>
         </div>
         <div class="debug-section">
+            <strong>{% trans "Is Correct" %}:</strong> 
+            <span id="is-correct-debug">{{ is_correct|yesno:"Yes,No" }}</span>
+        </div>
+        <div class="debug-section">
+            <strong>{% trans "Score" %}:</strong> 
+            <span id="score-debug">{{ score }}/{{ weight }}</span>
+        </div>
+        <div class="debug-section">
             <strong>{% trans "Block ID" %}:</strong> 
             <span>{{ block_id }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Staff View Panel (only shown to staff) -->
+    {% if is_staff %}
+    <div class="staff-panel" role="complementary" aria-label="{% trans 'Staff Information' %}">
+        <h4 class="staff-panel-title">{% trans "Staff Information" %}</h4>
+        <div class="staff-section">
+            <strong>{% trans "Learner Response" %}:</strong>
+            <pre id="staff-learner-response" class="staff-pre">{{ learner_response|default:"{}" }}</pre>
+        </div>
+        <div class="staff-section">
+            <strong>{% trans "Interaction Count" %}:</strong> 
+            <span id="staff-interaction-count">{{ interaction_count }}</span>
+        </div>
+        <div class="staff-section">
+            <strong>{% trans "Last Interaction" %}:</strong> 
+            <span id="staff-last-interaction">{{ last_interaction_time|default:"None" }}</span>
+        </div>
+        <div class="staff-section">
+            <strong>{% trans "Is Correct" %}:</strong> 
+            <span id="staff-is-correct">{{ is_correct|yesno:"Yes,No" }}</span>
+        </div>
+        <div class="staff-section">
+            <strong>{% trans "Score" %}:</strong> 
+            <span id="staff-score">{{ score }}/{{ weight }}</span>
+        </div>
+        <div class="staff-section">
+            <strong>{% trans "Feedback Message" %}:</strong> 
+            <span id="staff-feedback-message">{{ feedback_message|default:"None" }}</span>
         </div>
     </div>
     {% endif %}

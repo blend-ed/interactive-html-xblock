@@ -7,6 +7,7 @@ function InteractiveJSBlockView(runtime, element) {
     var blockId = element.getAttribute('data-block-id');
     var displayName = element.querySelector('.interactive-js-block').getAttribute('aria-label');
     var isDebugMode = element.querySelector('.debug-panel') !== null;
+    var isStaff = element.querySelector('.staff-panel') !== null;
     
     // Create the XBlockInterface for safe JS → XBlock communication
     var XBlockInterface = {
@@ -44,6 +45,16 @@ function InteractiveJSBlockView(runtime, element) {
                         console.log('Interaction saved:', response.message);
                         self.updateDebugInfo(response);
                         self.showSuccess('Interaction saved successfully');
+                        
+                        // Show feedback if available
+                        if (response.show_feedback) {
+                            self.showFeedback(response);
+                        }
+                        
+                        // Update staff panel if staff
+                        if (isStaff) {
+                            self.updateStaffPanel(response);
+                        }
                     } else {
                         console.error('Failed to save interaction:', response.message);
                         self.showError('Failed to save interaction: ' + response.message);
@@ -55,6 +66,82 @@ function InteractiveJSBlockView(runtime, element) {
                     self.showError('Network error: ' + error);
                 }
             });
+        },
+        
+        showFeedback: function(response) {
+            var feedbackDisplay = element.querySelector('#feedback-display');
+            var statusIcon = element.querySelector('#status-icon');
+            var statusText = element.querySelector('#status-text');
+            var scoreValue = element.querySelector('#score-value');
+            var feedbackMessageText = element.querySelector('#feedback-message-text');
+            var feedbackStatus = element.querySelector('#feedback-status');
+            
+            if (feedbackDisplay && response.is_correct !== undefined) {
+                // Update status
+                if (response.is_correct) {
+                    statusIcon.textContent = '✓';
+                    statusText.textContent = 'Correct';
+                    feedbackStatus.className = 'feedback-status correct';
+                } else {
+                    statusIcon.textContent = '✗';
+                    statusText.textContent = 'Incorrect';
+                    feedbackStatus.className = 'feedback-status incorrect';
+                }
+                
+                // Update score - use weight from response if available, otherwise use a default
+                if (scoreValue && response.score !== undefined) {
+                    var weight = response.weight || 1;
+                    scoreValue.textContent = response.score + '/' + weight;
+                }
+                
+                // Update feedback message
+                if (feedbackMessageText && response.feedback_message) {
+                    feedbackMessageText.textContent = response.feedback_message;
+                }
+                
+                // Show the feedback display
+                feedbackDisplay.style.display = 'block';
+                
+                // Hide after 5 seconds
+                setTimeout(function() {
+                    feedbackDisplay.style.display = 'none';
+                }, 5000);
+            }
+        },
+        
+        updateStaffPanel: function(response) {
+            // Update staff panel with new data
+            var staffResponse = element.querySelector('#staff-learner-response');
+            var staffInteractionCount = element.querySelector('#staff-interaction-count');
+            var staffLastInteraction = element.querySelector('#staff-last-interaction');
+            var staffIsCorrect = element.querySelector('#staff-is-correct');
+            var staffScore = element.querySelector('#staff-score');
+            var staffFeedbackMessage = element.querySelector('#staff-feedback-message');
+            
+            if (staffResponse && response.learner_response) {
+                staffResponse.textContent = JSON.stringify(response.learner_response, null, 2);
+            }
+            
+            if (staffInteractionCount && response.interaction_count !== undefined) {
+                staffInteractionCount.textContent = response.interaction_count;
+            }
+            
+            if (staffLastInteraction && response.last_interaction_time) {
+                staffLastInteraction.textContent = response.last_interaction_time;
+            }
+            
+            if (staffIsCorrect && response.is_correct !== undefined) {
+                staffIsCorrect.textContent = response.is_correct ? 'Yes' : 'No';
+            }
+            
+            if (staffScore && response.score !== undefined) {
+                var weight = response.weight || 1;
+                staffScore.textContent = response.score + '/' + weight;
+            }
+            
+            if (staffFeedbackMessage && response.feedback_message) {
+                staffFeedbackMessage.textContent = response.feedback_message;
+            }
         },
         
         showError: function(message) {
@@ -94,11 +181,23 @@ function InteractiveJSBlockView(runtime, element) {
         },
         
         updateDebugInfo: function(response) {
-            if (response.interaction_count !== undefined) {
-                var countElements = element.querySelectorAll('#interaction-count, #interaction-count-debug');
-                countElements.forEach(function(el) {
-                    el.textContent = response.interaction_count;
-                });
+            var countElement = element.querySelector('#interaction-count-debug');
+            var lastElement = element.querySelector('#last-interaction-debug');
+            var isCorrectElement = element.querySelector('#is-correct-debug');
+            var scoreElement = element.querySelector('#score-debug');
+            
+            if (countElement && response.interaction_count !== undefined) {
+                countElement.textContent = response.interaction_count;
+            }
+            if (lastElement && response.last_interaction_time) {
+                lastElement.textContent = response.last_interaction_time;
+            }
+            if (isCorrectElement && response.is_correct !== undefined) {
+                isCorrectElement.textContent = response.is_correct ? 'Yes' : 'No';
+            }
+            if (scoreElement && response.score !== undefined) {
+                var weight = response.weight || 1;
+                scoreElement.textContent = response.score + '/' + weight;
             }
         }
     };
@@ -244,7 +343,8 @@ function InteractiveJSBlockView(runtime, element) {
         showError: XBlockInterface.showError,
         showSuccess: XBlockInterface.showSuccess,
         showLoading: XBlockInterface.showLoading,
-        updateDebugInfo: XBlockInterface.updateDebugInfo
+        updateDebugInfo: XBlockInterface.updateDebugInfo,
+        showFeedback: XBlockInterface.showFeedback
     };
 }
 

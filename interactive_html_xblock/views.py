@@ -56,6 +56,10 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
         'enable_debug_mode',
         'auto_grade_enabled',
         'weight',
+        'correct_answers',
+        'show_feedback_to_learners',
+        'show_previous_response',
+        'enable_instructor_view',
     ]
 
     def get_editable_fields(self):
@@ -92,6 +96,13 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             'learner_response': getattr(self, 'learner_response', {}),
             'interaction_count': getattr(self, 'interaction_count', 0),
             'last_interaction_time': getattr(self, 'last_interaction_time', ''),
+            'is_correct': getattr(self, 'is_correct', False),
+            'score': getattr(self, 'score', 0.0),
+            'weight': getattr(self, 'weight', 1),
+            'feedback_message': getattr(self, 'feedback_message', ''),
+            'show_feedback_to_learners': getattr(self, 'show_feedback_to_learners', True),
+            'show_previous_response': getattr(self, 'show_previous_response', True),
+            'is_staff': self.is_staff(),
         })
 
         # Load the template
@@ -130,6 +141,10 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             'enable_debug_mode': getattr(self, 'enable_debug_mode', False),
             'auto_grade_enabled': getattr(self, 'auto_grade_enabled', False),
             'weight': getattr(self, 'weight', 1),
+            'correct_answers': json.dumps(getattr(self, 'correct_answers', {})),
+            'show_feedback_to_learners': getattr(self, 'show_feedback_to_learners', True),
+            'show_previous_response': getattr(self, 'show_previous_response', True),
+            'enable_instructor_view': getattr(self, 'enable_instructor_view', True),
         })
 
         # Load the studio template
@@ -145,10 +160,6 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
         frag.initialize_js('StudioView')
         
         return frag
-
-
-
-
 
     def render_template(self, template_path, context):
         """
@@ -168,6 +179,83 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             i18n_service=self.runtime.service(self, 'i18n'),
         )
 
+    def _evaluate_response(self, data):
+        """
+        Evaluate the learner response and determine if it's correct
+        """
+        correct_answers = getattr(self, 'correct_answers', {})
+        auto_grade_enabled = getattr(self, 'auto_grade_enabled', False)
+        
+        log.info("Evaluating response: data=%s, correct_answers=%s, auto_grade_enabled=%s", 
+                data, correct_answers, auto_grade_enabled)
+        
+        # If author's JavaScript provides a 'correct' field, use it directly
+        if 'correct' in data and isinstance(data['correct'], bool):
+            is_correct = data['correct']
+            score = self.weight if is_correct else 0.0
+            feedback = data.get('feedback', '') or (
+                correct_answers.get('correct_feedback', 'Correct!') if is_correct 
+                else correct_answers.get('incorrect_feedback', 'Incorrect. Try again.')
+            )
+            log.info("Using author-provided correct field: is_correct=%s, score=%s, feedback=%s", 
+                    is_correct, score, feedback)
+            return is_correct, score, feedback
+        
+        # If auto-grading is not enabled, return default values
+        if not auto_grade_enabled or not correct_answers:
+            log.info("Auto-grading not enabled or no correct answers configured")
+            return False, 0.0, ""
+        
+        try:
+            # Check if the response matches any correct answer
+            is_correct = False
+            score = 0.0
+            feedback = ""
+            
+            # Simple evaluation - check if answer field matches
+            if 'answer' in data and 'answer' in correct_answers:
+                user_answer = str(data['answer']).strip().lower()
+                correct_answer = str(correct_answers['answer']).strip().lower()
+                is_correct = user_answer == correct_answer
+                
+                if is_correct:
+                    score = self.weight
+                    feedback = correct_answers.get('correct_feedback', 'Correct!')
+                else:
+                    feedback = correct_answers.get('incorrect_feedback', 'Incorrect. Try again.')
+                
+                log.info("Simple evaluation: user_answer='%s', correct_answer='%s', is_correct=%s, score=%s", 
+                        user_answer, correct_answer, is_correct, score)
+            
+            # More complex evaluation for multiple fields
+            elif 'fields' in correct_answers:
+                total_fields = len(correct_answers['fields'])
+                correct_fields = 0
+                
+                for field_name, expected_value in correct_answers['fields'].items():
+                    if field_name in data:
+                        user_value = str(data[field_name]).strip().lower()
+                        expected_value = str(expected_value).strip().lower()
+                        if user_value == expected_value:
+                            correct_fields += 1
+                
+                is_correct = correct_fields == total_fields
+                score = (correct_fields / total_fields) * self.weight if total_fields > 0 else 0.0
+                
+                if is_correct:
+                    feedback = correct_answers.get('correct_feedback', 'All answers correct!')
+                else:
+                    feedback = correct_answers.get('incorrect_feedback', f'{correct_fields}/{total_fields} answers correct.')
+                
+                log.info("Complex evaluation: correct_fields=%s, total_fields=%s, is_correct=%s, score=%s", 
+                        correct_fields, total_fields, is_correct, score)
+            
+            return is_correct, score, feedback
+            
+        except Exception as e:
+            log.error("Error evaluating response: %s", str(e))
+            return False, 0.0, "Error evaluating response"
+
     @XBlock.json_handler
     def save_interaction(self, data, suffix=''):
         """
@@ -183,114 +271,72 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             return {'status': 'error', 'message': 'Data must be a JSON object'}
         
         try:
+            # Evaluate the response if auto-grading is enabled
+            is_correct, score, feedback = self._evaluate_response(data)
+            
             # Update learner response
             self.learner_response = data
             self.interaction_count += 1
             self.last_interaction_time = datetime.datetime.utcnow().isoformat()
+            self.is_correct = is_correct
+            self.score = score
+            self.feedback_message = feedback
             
-            # Handle auto-grading if enabled
+            # Publish grade if auto-grading is enabled
             if self.auto_grade_enabled:
-                self._handle_auto_grading(data)
+                try:
+                    self.runtime.publish(
+                        self,
+                        'grade',
+                        {
+                            'value': self.score,
+                            'max_value': self.max_score()
+                        }
+                    )
+                except Exception as e:
+                    log.warning("Could not publish grade: %s", str(e))
             
             log.info("Interaction saved successfully for user %s", getattr(self.runtime, 'user_id', 'unknown'))
             
-            return {
+            response_data = {
                 'status': 'ok',
                 'message': 'Interaction saved successfully',
-                'interaction_count': self.interaction_count
+                'interaction_count': self.interaction_count,
+                'is_correct': self.is_correct,
+                'score': self.score,
+                'weight': self.weight,
+                'feedback_message': self.feedback_message,
+                'show_feedback': self.show_feedback_to_learners
+            }
+            
+            log.info("Returning response data: %s", response_data)
+            return response_data
+            
+        except Exception as e:
+            log.error("Error saving interaction: %s", str(e))
+            return {'status': 'error', 'message': 'Failed to save interaction'}
+
+    @XBlock.json_handler
+    def get_learner_data(self, data, suffix=''):
+        """
+        Get learner data for staff view
+        """
+        if not self.is_staff():
+            return {'status': 'error', 'message': 'Access denied'}
+        
+        try:
+            return {
+                'status': 'ok',
+                'learner_response': self.learner_response,
+                'interaction_count': self.interaction_count,
+                'last_interaction_time': self.last_interaction_time,
+                'is_correct': self.is_correct,
+                'score': self.score,
+                'feedback_message': self.feedback_message,
             }
         except Exception as e:
-            log.error("Error saving interaction data: %s", str(e))
-            return {
-                'status': 'error',
-                'message': 'Failed to save interaction'
-            }
-
-    def _handle_auto_grading(self, data):
-        """
-        Handle automatic grading based on interaction data
-        """
-        # Check if the data contains a score or grade
-        try:
-            if 'score' in data:
-                score = float(data['score'])
-                if score < 0 or score > self.max_score():
-                    log.warning("Invalid score value: %s (max: %s)", score, self.max_score())
-                    return
-                self.set_score(score)
-            elif 'grade' in data:
-                grade = float(data['grade'])
-                if grade < 0 or grade > self.max_score():
-                    log.warning("Invalid grade value: %s (max: %s)", grade, self.max_score())
-                    return
-                self.set_score(grade)
-            elif 'correct' in data:
-                # Boolean grading
-                if not isinstance(data['correct'], bool):
-                    log.warning("'correct' field must be boolean, got: %s", type(data['correct']))
-                    return
-                score = self.max_score() if data['correct'] else 0.0
-                self.set_score(score)
-        except (ValueError, TypeError) as e:
-            log.error("Error processing grading data: %s", str(e))
-
-    def validate_field_data(self, validation, data):
-        """
-        Validate field data in studio
-        """
-        # The 'data' parameter is actually the XBlock instance (self)
-        # We need to validate the current field values
-        
-        # Validate HTML content
-        html_content = getattr(data, 'html_content', '')
-        if not html_content or not html_content.strip():
-            validation.add(
-                ValidationMessage(
-                    ValidationMessage.ERROR,
-                    'HTML content cannot be empty'
-                )
-            )
-        
-        # Validate weight
-        weight = getattr(data, 'weight', 1)
-        try:
-            weight_int = int(weight)
-            if weight_int < 0:
-                validation.add(
-                    ValidationMessage(
-                        ValidationMessage.ERROR,
-                        'Weight must be a non-negative integer'
-                    )
-                )
-        except (ValueError, TypeError):
-            validation.add(
-                ValidationMessage(
-                    ValidationMessage.ERROR,
-                    'Weight must be a valid integer'
-                )
-            )
-        
-        # Validate external URLs
-        allowed_urls = getattr(data, 'allowed_external_urls', [])
-        if allowed_urls is not None:
-            if not isinstance(allowed_urls, list):
-                validation.add(
-                    ValidationMessage(
-                        ValidationMessage.ERROR,
-                        'Allowed external URLs must be a list'
-                    )
-                )
-            else:
-                # Validate each URL
-                for url in allowed_urls:
-                    if not isinstance(url, str) or not url.strip():
-                        validation.add(
-                            ValidationMessage(
-                                ValidationMessage.ERROR,
-                                'All URLs must be non-empty strings'
-                            )
-                        )
-                        break
+            log.error("Error getting learner data: %s", str(e))
+            return {'status': 'error', 'message': 'Failed to get learner data'}
 
     @XBlock.handler
     def studio_submit(self, request, suffix=""):
@@ -309,6 +355,19 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             self.weight = int(data.get('weight', 1))
             self.enable_debug_mode = data.get('enable_debug_mode', False)
             self.auto_grade_enabled = data.get('auto_grade_enabled', False)
+            self.show_feedback_to_learners = data.get('show_feedback_to_learners', True)
+            self.show_previous_response = data.get('show_previous_response', True)
+            self.enable_instructor_view = data.get('enable_instructor_view', True)
+            
+            # Handle correct_answers
+            correct_answers = data.get('correct_answers', {})
+            if isinstance(correct_answers, str):
+                try:
+                    self.correct_answers = json.loads(correct_answers)
+                except json.JSONDecodeError:
+                    self.correct_answers = {}
+            else:
+                self.correct_answers = correct_answers
             
             # Handle allowed_external_urls
             allowed_urls = data.get('allowed_external_urls', [])
