@@ -17,74 +17,7 @@
     </div>
     {% endif %}
 
-    <!-- Staff Panel with Learner History -->
-    {% if is_staff %}
-    <div class="staff-panel" id="staff-panel">
-        <h4>{% trans "Learner History (Staff Only)" %}</h4>
-        
-        <div class="staff-note">
-            <p><strong>Note:</strong> Due to XBlock security limitations, you may only see your own interaction data. To view all students' data, use the course instructor dashboard or analytics tools.</p>
-        </div>
-        
-        <!-- Current Learner Data -->
-        <div class="current-learner-section">
-            <h5>{% trans "Current Learner Data" %}</h5>
-            <div class="learner-data">
-                <p><strong>{% trans "User ID" %}:</strong> {{ user_id }}</p>
-                <p><strong>{% trans "Username" %}:</strong> {{ username }}</p>
-                <p><strong>{% trans "Email" %}:</strong> {{ user_email }}</p>
-                <p><strong>{% trans "Full Name" %}:</strong> {{ user_full_name }}</p>
-                <p><strong>{% trans "Interaction Count" %}:</strong> {{ interaction_count }}</p>
-                <p><strong>{% trans "Last Interaction" %}:</strong> {{ last_interaction_time }}</p>
-                <p><strong>{% trans "Is Correct" %}:</strong> {{ is_correct|yesno:"Yes,No" }}</p>
-                <p><strong>{% trans "Score" %}:</strong> {{ score }}/{{ weight }}</p>
-                {% if feedback_message %}
-                <p><strong>{% trans "Feedback Message" %}:</strong> {{ feedback_message }}</p>
-                {% endif %}
-            </div>
-            
-            {% if learner_response %}
-            <div class="current-response">
-                <h6>{% trans "Current Response" %}</h6>
-                <pre>{{ learner_response|pprint }}</pre>
-            </div>
-            {% endif %}
-        </div>
 
-        <!-- All Learners History -->
-        <div class="all-learners-section">
-            <h5>{% trans "All Learners History" %}</h5>
-            <div class="learners-table-container">
-                <table class="learners-table">
-                    <thead>
-                        <tr>
-                            <th>{% trans "Student" %}</th>
-                            <th>{% trans "Email" %}</th>
-                            <th>{% trans "Response" %}</th>
-                            <th>{% trans "Score" %}</th>
-                            <th>{% trans "Correct" %}</th>
-                            <th>{% trans "Interactions" %}</th>
-                            <th>{% trans "Last Submission" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="learners-table-body">
-                        <!-- This will be populated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="table-actions">
-                <button class="refresh-btn" onclick="refreshLearnersData()">
-                    <span class="refresh-icon">🔄</span>
-                    {% trans "Refresh Data" %}
-                </button>
-                <button class="export-btn" onclick="exportLearnersData()">
-                    <span class="export-icon">📊</span>
-                    {% trans "Export CSV" %}
-                </button>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Previous Response Display -->
     {% if show_previous_response and learner_response %}

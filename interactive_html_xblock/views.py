@@ -59,7 +59,7 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
         'correct_answers',
         'show_feedback_to_learners',
         'show_previous_response',
-        'enable_instructor_view',
+
     ]
 
     def get_editable_fields(self):
@@ -154,7 +154,7 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             'correct_answers': json.dumps(getattr(self, 'correct_answers', {})),
             'show_feedback_to_learners': getattr(self, 'show_feedback_to_learners', True),
             'show_previous_response': getattr(self, 'show_previous_response', True),
-            'enable_instructor_view': getattr(self, 'enable_instructor_view', True),
+
         })
 
         # Load the studio template
@@ -358,329 +358,11 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             log.error("Error getting learner data: %s", str(e))
             return {'status': 'error', 'message': 'Failed to get learner data'}
 
-    @XBlock.json_handler
-    def get_all_learners_data(self, data, suffix=''):
-        """
-        Get all learners' data for staff view
-        Note: Due to XBlock security limitations, this may only show the current user's data
-        """
-        if not self.is_staff():
-            return {'status': 'error', 'message': 'Access denied'}
-        
-        try:
-            # Get all enrolled students for this course
-            course_id = str(self.course_id)
-            students = self._get_enrolled_students(course_id)
-            
-            log.info("Found %d enrolled students for course %s", len(students), course_id)
-            
-            learners_data = []
-            current_user_id = self.runtime.get_real_user(self.runtime.anonymous_student_id).id if self.runtime.get_real_user(self.runtime.anonymous_student_id) else None
-            
-            for student in students:
-                user_id, username, email, full_name = student
-                
-                # For now, only show data for the current user due to XBlock limitations
-                if user_id == current_user_id:
-                    student_data = self._get_student_data_simple(student)
-                    if student_data:
-                        learners_data.append(student_data)
-                        log.info("Got data for current user %s: %s", username, student_data.get('learner_response', {}))
-                else:
-                    # For other users, just show basic info without their data
-                    learners_data.append({
-                        'user_id': user_id,
-                        'username': username,
-                        'email': email,
-                        'full_name': full_name or username,
-                        'learner_response': {'note': 'Data not accessible due to XBlock security limitations'},
-                        'interaction_count': 0,
-                        'last_interaction_time': 'Not accessible',
-                        'is_correct': False,
-                        'score': 0.0,
-                        'feedback_message': 'Data not accessible',
-                    })
-                    log.info("Added basic info for user %s (data not accessible)", username)
-            
-            log.info("Returning data for %d learners", len(learners_data))
-            
-            return {
-                'status': 'ok',
-                'learners': learners_data,
-                'note': 'Due to XBlock security limitations, only the current user\'s data is fully accessible. Other users\' data is limited.'
-            }
-        except Exception as e:
-            log.error("Error getting all learners data: %s", str(e))
-            return {'status': 'error', 'message': 'Failed to get learners data'}
 
-    def _get_enrolled_students(self, course_id):
-        """
-        Get all enrolled students for a course
-        """
-        try:
-            from openedx.core.djangoapps.enrollments.data import get_user_enrollments
-            enrollments = get_user_enrollments(course_id)
-            return [(enrollment.user_id, enrollment.user.username, enrollment.user.email, enrollment.user.get_full_name()) 
-                   for enrollment in enrollments]
-        except Exception as e:
-            log.error("Error getting enrolled students: %s", str(e))
-            return []
 
-    def _get_student_data_simple(self, student):
-        """
-        Get data for a specific student using a simpler approach
-        """
-        try:
-            user_id, username, email, full_name = student
-            
-            # Try to get the actual student data using a more direct approach
-            try:
-                # Use the XBlock's field storage to get user state data
-                student_data = self._get_user_state_direct(user_id)
-                
-                if student_data and student_data.get('learner_response'):
-                    return {
-                        'user_id': user_id,
-                        'username': username,
-                        'email': email,
-                        'full_name': full_name or username,
-                        'learner_response': student_data.get('learner_response', {}),
-                        'interaction_count': student_data.get('interaction_count', 0),
-                        'last_interaction_time': student_data.get('last_interaction_time', ''),
-                        'is_correct': student_data.get('is_correct', False),
-                        'score': student_data.get('score', 0.0),
-                        'feedback_message': student_data.get('feedback_message', ''),
-                    }
-                else:
-                    # Return basic info if no data found
-                    return {
-                        'user_id': user_id,
-                        'username': username,
-                        'email': email,
-                        'full_name': full_name or username,
-                        'learner_response': {},
-                        'interaction_count': 0,
-                        'last_interaction_time': 'No interactions yet',
-                        'is_correct': False,
-                        'score': 0.0,
-                        'feedback_message': 'No data available',
-                    }
-            except Exception as e:
-                log.error("Error getting user state for user %s: %s", user_id, str(e))
-                # Return basic info on error
-                return {
-                    'user_id': user_id,
-                    'username': username,
-                    'email': email,
-                    'full_name': full_name or username,
-                    'learner_response': {'error': 'Could not load data'},
-                    'interaction_count': 0,
-                    'last_interaction_time': 'Error loading data',
-                    'is_correct': False,
-                    'score': 0.0,
-                    'feedback_message': 'Error loading data',
-                }
-                
-        except Exception as e:
-            log.error("Error getting student data for user %s: %s", student[0], str(e))
-            return None
 
-    def _get_user_state_direct(self, user_id):
-        """
-        Get user state data directly using Django ORM
-        """
-        try:
-            # Use Django ORM to directly query the user state data
-            from django.contrib.auth import get_user_model
-            from xmodule.modulestore.django import modulestore
-            from opaque_keys.edx.keys import UsageKey
-            
-            # Get the usage key
-            usage_key = UsageKey.from_string(str(self.location))
-            
-            # Try to get the user
-            User = get_user_model()
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                log.warning("User %s does not exist", user_id)
-                return None
-            
-            # Get the block from the modulestore
-            block = modulestore().get_item(usage_key)
-            if not block:
-                log.warning("Could not get block from modulestore for location: %s", str(self.location))
-                return None
-            
-            # Try to get user state through the block's field storage
-            user_state = {}
-            
-            try:
-                # Try to access the user state through the block's field storage
-                field_storage = block.get_user_state(user_id)
-                if field_storage:
-                    for field_name in ['learner_response', 'interaction_count', 'last_interaction_time', 'is_correct', 'score', 'feedback_message']:
-                        try:
-                            if hasattr(field_storage, field_name):
-                                value = getattr(field_storage, field_name, None)
-                                if value is not None:
-                                    user_state[field_name] = value
-                        except Exception as field_error:
-                            log.debug("Error getting field %s for user %s: %s", field_name, user_id, str(field_error))
-                            continue
-            except Exception as storage_error:
-                log.debug("Error getting field storage for user %s: %s", user_id, str(storage_error))
-            
-            # If we got any data, return it
-            if user_state:
-                return user_state
-            
-            # If no data through field storage, try a different approach
-            try:
-                # Try to get data through the block's user state methods
-                for field_name in ['learner_response', 'interaction_count', 'last_interaction_time', 'is_correct', 'score', 'feedback_message']:
-                    try:
-                        # Try to call the field's get method for this user
-                        field = getattr(block, field_name, None)
-                        if field and hasattr(field, 'get'):
-                            value = field.get(user_id)
-                            if value is not None:
-                                user_state[field_name] = value
-                    except Exception as field_error:
-                        log.debug("Error getting field %s for user %s: %s", field_name, user_id, str(field_error))
-                        continue
-            except Exception as method_error:
-                log.debug("Error using block methods for user %s: %s", user_id, str(method_error))
-            
-            # If still no data, try to query the database directly
-            if not user_state:
-                try:
-                    # Try to query the XBlock user state table directly
-                    from django.db import connection
-                    
-                    # Get the block_id from the usage key
-                    block_id = str(usage_key)
-                    
-                    with connection.cursor() as cursor:
-                        # Query the XBlock user state table
-                        cursor.execute("""
-                            SELECT field_name, value 
-                            FROM xblock_django_xblockuserstate 
-                            WHERE block_id = %s AND user_id = %s
-                        """, [block_id, user_id])
-                        
-                        rows = cursor.fetchall()
-                        for row in rows:
-                            field_name, value = row
-                            if field_name in ['learner_response', 'interaction_count', 'last_interaction_time', 'is_correct', 'score', 'feedback_message']:
-                                try:
-                                    # Try to parse JSON values
-                                    import json
-                                    parsed_value = json.loads(value)
-                                    user_state[field_name] = parsed_value
-                                except (json.JSONDecodeError, TypeError):
-                                    # If not JSON, use as string
-                                    user_state[field_name] = value
-                    
-                    log.info("Direct database query for user %s returned %d fields", user_id, len(user_state))
-                    
-                except Exception as db_error:
-                    log.debug("Error querying database for user %s: %s", user_id, str(db_error))
-            
-            return user_state if user_state else None
-                
-        except Exception as e:
-            log.error("Error in _get_user_state_direct for user %s: %s", user_id, str(e))
-            return None
 
-    def _load_student_xblock(self, user_id):
-        """
-        Load the XBlock instance for a specific student
-        """
-        # This method is no longer needed with the simplified approach
-        return None
 
-    @XBlock.handler
-    def export_learners_csv(self, request, suffix=""):
-        """
-        Export all learners' data as CSV for staff
-        """
-        if not self.is_staff():
-            return Response(
-                json.dumps({"error": "Access denied"}),
-                content_type="application/json",
-                charset="utf8"
-            )
-        
-        try:
-            import csv
-            import io
-            from datetime import datetime
-            
-            # Get all learners data
-            course_id = str(self.course_id)
-            students = self._get_enrolled_students(course_id)
-            
-            # Create CSV data
-            output = io.StringIO()
-            writer = csv.writer(output)
-            
-            # Write header
-            writer.writerow([
-                'Student Name',
-                'Username', 
-                'Email',
-                'Answer',
-                'Score',
-                'Correct',
-                'Feedback Message',
-                'Interaction Count',
-                'Last Submission Time',
-                'Full Response Data'
-            ])
-            
-            # Write data rows
-            for student in students:
-                student_data = self._get_student_data_simple(student)
-                if student_data:
-                    answer = student_data['learner_response'].get('answer', '') if student_data['learner_response'] else ''
-                    writer.writerow([
-                        student_data['full_name'],
-                        student_data['username'],
-                        student_data['email'],
-                        answer,
-                        student_data['score'],
-                        'Yes' if student_data['is_correct'] else 'No',
-                        student_data['feedback_message'],
-                        student_data['interaction_count'],
-                        student_data['last_interaction_time'],
-                        json.dumps(student_data['learner_response']) if student_data['learner_response'] else ''
-                    ])
-            
-            # Prepare response
-            csv_data = output.getvalue()
-            output.close()
-            
-            # Create filename with timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"interactive_js_learners_{self.location.block_id}_{timestamp}.csv"
-            
-            response = Response(
-                csv_data,
-                content_type="text/csv",
-                charset="utf8"
-            )
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            
-            return response
-            
-        except Exception as e:
-            log.error("Error exporting learners CSV: %s", str(e))
-            return Response(
-                json.dumps({"error": "Failed to export learners data"}),
-                content_type="application/json",
-                charset="utf8"
-            )
 
     @XBlock.handler
     def export_submissions(self, request, suffix=""):
@@ -785,7 +467,7 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
             self.auto_grade_enabled = data.get('auto_grade_enabled', False)
             self.show_feedback_to_learners = data.get('show_feedback_to_learners', True)
             self.show_previous_response = data.get('show_previous_response', True)
-            self.enable_instructor_view = data.get('enable_instructor_view', True)
+    
             
             # Handle correct_answers
             correct_answers = data.get('correct_answers', {})

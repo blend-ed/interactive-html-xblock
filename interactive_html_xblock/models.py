@@ -94,12 +94,7 @@ class InteractiveJSBlockModelMixin(object):
         scope=Scope.content,
     )
 
-    enable_instructor_view = Boolean(
-        display_name=_('Enable Instructor View'),
-        help=_('Enable instructor dashboard view for this block'),
-        default=True,
-        scope=Scope.content,
-    )
+
 
     # Learner data fields
     learner_response = JSONField(

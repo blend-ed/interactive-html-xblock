@@ -3,21 +3,14 @@
 function InteractiveJSBlockView(runtime, element) {
     'use strict';
     
-    var isStaff = false;
+
     var blockId = element.getAttribute('data-block-id');
     
     // Initialize the view
     function initializeView() {
         console.log('InteractiveJSBlock: Initializing view');
         
-        // Check if user is staff
-        var staffPanel = element.querySelector('#staff-panel');
-        isStaff = staffPanel !== null;
-        
-        if (isStaff) {
-            console.log('InteractiveJSBlock: Staff view detected');
-            initializeStaffView();
-        }
+
         
         // Initialize author's CSS and JS
         initializeAuthorContent();
@@ -28,176 +21,9 @@ function InteractiveJSBlockView(runtime, element) {
         console.log('InteractiveJSBlock: View initialized');
     }
     
-    // Initialize staff-specific functionality
-    function initializeStaffView() {
-        // Load all learners data on page load
-        loadAllLearnersData();
-        
-        // Set up refresh and export buttons
-        var refreshBtn = element.querySelector('.refresh-btn');
-        var exportBtn = element.querySelector('.export-btn');
-        
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', loadAllLearnersData);
-        }
-        
-        if (exportBtn) {
-            exportBtn.addEventListener('click', exportLearnersData);
-        }
-    }
+
     
-    // Load all learners data for staff view
-    function loadAllLearnersData() {
-        if (!isStaff) return;
-        
-        console.log('InteractiveJSBlock: Loading all learners data');
-        
-        var handlerUrl = runtime.handlerUrl(element, 'get_all_learners_data');
-        
-        // Show loading indicator
-        var tableBody = element.querySelector('#learners-table-body');
-        if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="7" class="loading-data">Loading learners data...</td></tr>';
-        }
-        
-        $.ajax({
-            type: 'POST',
-            url: handlerUrl,
-            data: JSON.stringify({}),
-            success: function(response) {
-                console.log('InteractiveJSBlock: Received learners data:', response);
-                
-                if (response.status === 'ok') {
-                    if (response.learners && response.learners.length > 0) {
-                        displayLearnersTable(response.learners);
-                        
-                        // Show note about limitations if provided
-                        if (response.note) {
-                            showMessage(response.note, 'info');
-                        }
-                    } else {
-                        displayLearnersTable([]);
-                    }
-                } else {
-                    console.error('InteractiveJSBlock: Failed to load learners data:', response.message);
-                    if (tableBody) {
-                        tableBody.innerHTML = '<tr><td colspan="7" class="error-data">Error loading data: ' + response.message + '</td></tr>';
-                    }
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('InteractiveJSBlock: Error loading learners data:', error);
-                console.error('InteractiveJSBlock: XHR status:', xhr.status);
-                console.error('InteractiveJSBlock: Response text:', xhr.responseText);
-                
-                if (tableBody) {
-                    tableBody.innerHTML = '<tr><td colspan="7" class="error-data">Error loading data: ' + error + '</td></tr>';
-                }
-            }
-        });
-    }
-    
-    // Display learners data in table
-    function displayLearnersTable(learners) {
-        var tableBody = element.querySelector('#learners-table-body');
-        if (!tableBody) return;
-        
-        tableBody.innerHTML = '';
-        
-        if (learners.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7" class="no-data">No learner data available</td></tr>';
-            return;
-        }
-        
-        learners.forEach(function(learner) {
-            var row = document.createElement('tr');
-            row.className = 'learner-row ' + (learner.is_correct ? 'correct' : 'incorrect');
-            
-            // Student info
-            var studentCell = document.createElement('td');
-            studentCell.className = 'student-info';
-            studentCell.innerHTML = `
-                <div class="student-name">${learner.full_name}</div>
-                <div class="student-username">@${learner.username}</div>
-            `;
-            
-            // Email
-            var emailCell = document.createElement('td');
-            emailCell.className = 'student-email';
-            emailCell.innerHTML = `<a href="mailto:${learner.email}">${learner.email}</a>`;
-            
-            // Response data
-            var responseCell = document.createElement('td');
-            responseCell.className = 'response-data';
-            var answer = learner.learner_response && learner.learner_response.answer ? 
-                        learner.learner_response.answer : '<em>No answer field</em>';
-            responseCell.innerHTML = `
-                <div class="response-summary">
-                    <strong>Answer:</strong> ${answer}
-                </div>
-                <details class="response-details">
-                    <summary>View Full Response</summary>
-                    <pre>${JSON.stringify(learner.learner_response, null, 2)}</pre>
-                </details>
-            `;
-            
-            // Score
-            var scoreCell = document.createElement('td');
-            scoreCell.className = 'score';
-            scoreCell.textContent = learner.score;
-            
-            // Correct status
-            var correctCell = document.createElement('td');
-            correctCell.className = 'correct-status';
-            correctCell.innerHTML = learner.is_correct ? 
-                '<span class="status-correct" title="Correct">✓</span>' : 
-                '<span class="status-incorrect" title="Incorrect">✗</span>';
-            
-            // Interaction count
-            var countCell = document.createElement('td');
-            countCell.className = 'interaction-count';
-            countCell.textContent = learner.interaction_count;
-            
-            // Last interaction
-            var timeCell = document.createElement('td');
-            timeCell.className = 'last-interaction';
-            timeCell.innerHTML = `
-                <div class="interaction-time">${learner.last_interaction_time}</div>
-            `;
-            
-            row.appendChild(studentCell);
-            row.appendChild(emailCell);
-            row.appendChild(responseCell);
-            row.appendChild(scoreCell);
-            row.appendChild(correctCell);
-            row.appendChild(countCell);
-            row.appendChild(timeCell);
-            
-            tableBody.appendChild(row);
-        });
-    }
-    
-    // Export learners data as CSV
-    function exportLearnersData() {
-        if (!isStaff) return;
-        
-        console.log('InteractiveJSBlock: Exporting learners data');
-        
-        var exportUrl = runtime.handlerUrl(element, 'export_learners_csv');
-        
-        // Create a temporary link to trigger download
-        var link = document.createElement('a');
-        link.href = exportUrl;
-        link.download = 'interactive_js_learners.csv';
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Show success message
-        showMessage('Export started! Check your downloads folder.', 'success');
-    }
+
     
     // Initialize author's CSS and JavaScript content
     function initializeAuthorContent() {
@@ -248,12 +74,7 @@ function InteractiveJSBlockView(runtime, element) {
                         showFeedback(response);
                     }
                     
-                    // Update staff panel if staff
-                    if (isStaff) {
-                        updateStaffPanel(response);
-                        // Refresh all learners data
-                        loadAllLearnersData();
-                    }
+
                     
                     // Publish grade if auto-grading is enabled
                     if (response.publish_grade) {
@@ -328,25 +149,7 @@ function InteractiveJSBlockView(runtime, element) {
         }
     }
     
-    // Update staff panel
-    function updateStaffPanel(response) {
-        var staffPanel = element.querySelector('#staff-panel');
-        if (!staffPanel) return;
-        
-        // Update current learner data in staff panel
-        var interactionCount = staffPanel.querySelector('.learner-data p:nth-child(5)');
-        var lastInteraction = staffPanel.querySelector('.learner-data p:nth-child(6)');
-        var isCorrect = staffPanel.querySelector('.learner-data p:nth-child(7)');
-        var score = staffPanel.querySelector('.learner-data p:nth-child(8)');
-        
-        if (interactionCount) interactionCount.innerHTML = '<strong>Interaction Count:</strong> ' + (response.interaction_count || 0);
-        if (lastInteraction) lastInteraction.innerHTML = '<strong>Last Interaction:</strong> ' + (response.last_interaction_time || '');
-        if (isCorrect) isCorrect.innerHTML = '<strong>Is Correct:</strong> ' + (response.is_correct ? 'Yes' : 'No');
-        if (score) {
-            var weight = response.weight || 1;
-            score.innerHTML = '<strong>Score:</strong> ' + (response.score || 0) + '/' + weight;
-        }
-    }
+
     
     // Publish grade
     function publishGrade(score, weight) {

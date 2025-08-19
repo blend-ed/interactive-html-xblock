@@ -16,7 +16,7 @@ function StudioView(runtime, element) {
             correct_answers: $(element).find('textarea[name=xb_correct_answers]').val(),
             show_feedback_to_learners: $(element).find('input[name=xb_show_feedback_to_learners]').is(':checked'),
             show_previous_response: $(element).find('input[name=xb_show_previous_response]').is(':checked'),
-            enable_instructor_view: $(element).find('input[name=xb_enable_instructor_view]').is(':checked'),
+
             allowed_external_urls: []
         };
         
