@@ -75,10 +75,11 @@ class InteractiveJSBlockViewMixin(StudioEditableXBlockMixin):
         if context is None:
             context = {}
 
-        # Get user information
-        user = self.runtime.get_real_user(self.runtime.anonymous_student_id)
-        user_id = user.id if user else None
-        username = user.username if user else None
+        # Get user information via user service
+        user_service = self.runtime.service(self, 'user')
+        user = user_service.get_current_user() if user_service else None
+        user_id = user.opt_attrs.get('edx-platform.user_id') if user else None
+        username = user.opt_attrs.get('edx-platform.username') if user else None
 
         # Prepare context
         context.update({

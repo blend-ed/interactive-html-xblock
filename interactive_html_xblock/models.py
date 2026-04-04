@@ -178,12 +178,13 @@ class InteractiveJSBlockModelMixin(object):
         """
         Return True if the current user is staff
         """
-        if hasattr(self, "xmodule_runtime") and \
-           hasattr(self.xmodule_runtime, "user_is_staff"):
-            return self.xmodule_runtime.user_is_staff
-        else:
-            # In workbench and similar settings, always return true
-            return True
+        user_service = self.runtime.service(self, 'user')
+        if user_service:
+            user = user_service.get_current_user()
+            if user:
+                return user.opt_attrs.get('edx-platform.is_staff', False)
+        # In workbench and similar settings, always return true
+        return True
 
     def get_score(self):
         """
