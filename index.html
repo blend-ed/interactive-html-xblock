@@ -46,7 +46,11 @@ body {
   line-height: 1.6;
 }
 
-/* ── Page Shell ── */
+/* ── Phase visibility ── */
+.phase { display: none; }
+.phase.active { display: block; }
+
+/* ── Compose Phase (single column) ── */
 .page {
   max-width: 860px;
   margin: 0 auto;
@@ -335,140 +339,13 @@ body {
 }
 .error-dismiss:hover { opacity: 1; }
 
-/* ── Output Panels ── */
-.output-section {
-  display: none;
-  animation: slideIn 0.3s ease-out;
-}
-.output-section.visible { display: block; }
-
 @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-.output-grid {
-  display: grid;
-  gap: 16px;
-}
-
-.output-panel {
-  background: var(--code-bg);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  background: rgba(255,255,255,0.04);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.panel-lang {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-.panel-lang.html { color: #f97316; }
-.panel-lang.css { color: #a78bfa; }
-.panel-lang.js { color: #fbbf24; }
-
-.btn-copy {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  padding: 4px 12px;
-  border-radius: 4px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: transparent;
-  color: var(--code-text);
-  cursor: pointer;
-  transition: all 0.15s;
-  letter-spacing: 0.04em;
-}
-.btn-copy:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
-.btn-copy.copied { color: #4ade80; border-color: #4ade80; }
-
-.panel-code {
-  padding: 18px 20px;
-  overflow-x: auto;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.panel-code pre {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  line-height: 1.65;
-  color: var(--code-text);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* ── Scrollbar ── */
-.panel-code::-webkit-scrollbar { width: 6px; height: 6px; }
-.panel-code::-webkit-scrollbar-track { background: transparent; }
-.panel-code::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-.panel-code::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 /* ── Divider ── */
 .divider {
   height: 1px;
   background: var(--border);
   margin: 32px 0;
-}
-
-/* ── Preview ── */
-.preview-section {
-  display: none;
-  margin-top: 24px;
-  animation: slideIn 0.3s ease-out;
-}
-.preview-section.visible { display: block; }
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.preview-label {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-tertiary);
-  font-weight: 500;
-}
-
-.preview-badge {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  padding: 3px 10px;
-  border-radius: 100px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-}
-
-.preview-frame-wrap {
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.preview-frame {
-  width: 100%;
-  min-height: 400px;
-  border: none;
-  display: block;
 }
 
 /* ── History ── */
@@ -565,7 +442,594 @@ body {
 }
 .footer a:hover { text-decoration: underline; }
 
+/* ══════════════════════════════════════ */
+/* ── REVIEW PHASE: Canvas Split Pane ── */
+/* ══════════════════════════════════════ */
+
+.review-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Left: Chat Panel ── */
+.chat-panel {
+  width: 40%;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.chat-top-bar {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-back {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-back:hover { background: var(--ground); border-color: var(--ink-tertiary); }
+.btn-back svg { width: 14px; height: 14px; }
+
+.chat-top-title {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+  font-weight: 500;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-messages::-webkit-scrollbar { width: 5px; }
+.chat-messages::-webkit-scrollbar-track { background: transparent; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Chat Bubbles ── */
+.chat-msg {
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  word-break: break-word;
+  animation: slideIn 0.2s ease-out;
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-msg.ai {
+  align-self: flex-start;
+  background: var(--ground);
+  color: var(--ink);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-msg.ai.success {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid #bbf7d0;
+}
+
+.chat-msg.ai.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+
+.chat-msg.ai.loading {
+  background: var(--ground);
+  color: var(--ink-tertiary);
+}
+
+.chat-msg-time {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--ink-tertiary);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+.chat-msg.user .chat-msg-time { color: rgba(255,255,255,0.6); text-align: right; }
+
+/* ── Chat Input ── */
+.chat-input-area {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.chat-textarea {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--ground);
+  color: var(--ink);
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  min-height: 42px;
+  max-height: 120px;
+  transition: border-color 0.2s;
+}
+.chat-textarea:focus { border-color: var(--accent); }
+.chat-textarea::placeholder { color: var(--ink-tertiary); }
+
+.btn-send {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-send:hover { background: #1a2633; }
+.btn-send:disabled { background: var(--ground-deep); color: var(--ink-tertiary); cursor: not-allowed; }
+
+/* ── Right: Canvas Panel ── */
+.canvas-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ground);
+}
+
+/* ── Preview Area ── */
+.canvas-preview {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.canvas-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.canvas-preview-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+  font-weight: 500;
+}
+
+.canvas-preview-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.canvas-iframe-wrap {
+  flex: 1;
+  min-height: 0;
+  background: var(--surface);
+}
+
+.canvas-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* ── Tab Bar ── */
+.canvas-tabs {
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.canvas-tab {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  color: var(--ink-tertiary);
+  cursor: pointer;
+  transition: all 0.15s;
+  border-top: 2px solid transparent;
+  white-space: nowrap;
+}
+.canvas-tab:hover { color: var(--ink-secondary); background: var(--ground); }
+.canvas-tab.active { color: var(--accent); border-top-color: var(--accent); background: var(--accent-glow); }
+
+/* ── Tab Content ── */
+.canvas-tab-content {
+  display: none;
+  overflow-y: auto;
+  background: var(--ground);
+}
+.canvas-tab-content.active {
+  display: block;
+}
+
+/* Tab content when preview is active (tabs below preview) */
+.canvas-tab-content.tab-panel {
+  max-height: 45vh;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Code panels inside tabs ── */
+.tab-code-panel {
+  background: var(--code-bg);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.tab-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.tab-code-lang {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.tab-code-lang.html { color: #f97316; }
+.tab-code-lang.css { color: #a78bfa; }
+.tab-code-lang.js { color: #fbbf24; }
+
+.btn-copy {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--code-text);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.btn-copy:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
+.btn-copy.copied { color: #4ade80; border-color: #4ade80; }
+
+.tab-code-body {
+  padding: 18px 20px;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.tab-code-body pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--code-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tab-code-body::-webkit-scrollbar { width: 6px; height: 6px; }
+.tab-code-body::-webkit-scrollbar-track { background: transparent; }
+.tab-code-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+/* ── Grading Tab ── */
+.grading-form {
+  padding: 24px;
+}
+
+.grading-section {
+  margin-bottom: 20px;
+}
+
+.grading-section-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.grading-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.grading-label {
+  font-size: 0.88rem;
+  color: var(--ink);
+  font-weight: 500;
+  min-width: 160px;
+}
+
+.grading-select, .grading-input {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.grading-select:focus, .grading-input:focus { border-color: var(--accent); }
+.grading-select { cursor: pointer; }
+.grading-input { flex: 1; }
+.grading-input::placeholder { color: var(--ink-tertiary); }
+
+.grading-hidden { display: none; }
+
+/* Multi-field rows */
+.grading-field-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.grading-field-input {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+  flex: 1;
+  transition: border-color 0.2s;
+}
+.grading-field-input:focus { border-color: var(--accent); }
+.grading-field-input::placeholder { color: var(--ink-tertiary); }
+
+.grading-remove-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.grading-remove-btn:hover { opacity: 1; }
+
+.grading-add-btn {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 5px 12px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-tertiary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.grading-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Test grading */
+.test-grading-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.test-input-area {
+  margin-bottom: 12px;
+}
+
+.test-input-label {
+  font-size: 0.82rem;
+  color: var(--ink-secondary);
+  margin-bottom: 6px;
+}
+
+.test-json-textarea {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--ground);
+  color: var(--ink);
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+}
+.test-json-textarea:focus { border-color: var(--accent); }
+
+.test-single-input, .test-multi-input {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.test-single-input:focus, .test-multi-input:focus { border-color: var(--accent); }
+.test-single-input { width: 100%; }
+.test-multi-input { flex: 1; }
+.test-single-input::placeholder, .test-multi-input::placeholder { color: var(--ink-tertiary); }
+
+.btn-test {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-glow);
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-test:hover { background: var(--accent-soft); }
+
+.test-result {
+  display: none;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.test-result.visible { display: block; animation: slideIn 0.2s ease-out; }
+.test-result.correct { background: var(--success-soft); color: var(--success); border: 1px solid #bbf7d0; }
+.test-result.incorrect { background: var(--danger-soft); color: var(--danger); border: 1px solid #fecaca; }
+.test-result.warn { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+
+/* ── Export Tab ── */
+.export-section {
+  padding: 24px;
+}
+
+.export-panel {
+  background: var(--code-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.export-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.export-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--code-accent);
+}
+
+.export-body {
+  padding: 18px 20px;
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.export-body pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--code-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.export-body::-webkit-scrollbar { width: 6px; }
+.export-body::-webkit-scrollbar-track { background: transparent; }
+.export-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+.export-hint {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--ink-tertiary);
+  line-height: 1.5;
+}
+
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .review-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+  .chat-panel {
+    width: 100%;
+    min-width: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 45vh;
+  }
+  .canvas-panel {
+    min-height: 55vh;
+  }
+}
+
 @media (max-width: 640px) {
   .page { padding: 32px 16px 60px; }
   .header { margin-bottom: 32px; }
@@ -574,11 +1038,17 @@ body {
   .key-row .btn { text-align: center; }
   .chips { gap: 6px; }
   .chip { font-size: 0.72rem; padding: 5px 11px; }
+  .grading-row { flex-direction: column; align-items: stretch; gap: 6px; }
+  .grading-label { min-width: auto; }
 }
 </style>
 </head>
 <body>
 
+<!-- ══════════════════════════════════ -->
+<!-- ── PHASE 1: COMPOSE             ── -->
+<!-- ══════════════════════════════════ -->
+<div id="composePhase" class="phase active">
 <div class="page">
 
   <!-- Header -->
@@ -629,45 +1099,6 @@ body {
     <span id="errorMessage"></span>
   </div>
 
-  <!-- Output -->
-  <div class="output-section" id="outputSection">
-    <div class="divider"></div>
-    <div class="output-grid">
-      <div class="output-panel">
-        <div class="panel-header">
-          <span class="panel-lang html">HTML</span>
-          <button class="btn-copy" onclick="copyCode('htmlCode', this)">Copy</button>
-        </div>
-        <div class="panel-code"><pre id="htmlCode"></pre></div>
-      </div>
-      <div class="output-panel">
-        <div class="panel-header">
-          <span class="panel-lang css">CSS</span>
-          <button class="btn-copy" onclick="copyCode('cssCode', this)">Copy</button>
-        </div>
-        <div class="panel-code"><pre id="cssCode"></pre></div>
-      </div>
-      <div class="output-panel">
-        <div class="panel-header">
-          <span class="panel-lang js">JavaScript</span>
-          <button class="btn-copy" onclick="copyCode('jsCode', this)">Copy</button>
-        </div>
-        <div class="panel-code"><pre id="jsCode"></pre></div>
-      </div>
-    </div>
-
-    <!-- Preview -->
-    <div class="preview-section" id="previewSection">
-      <div class="preview-header">
-        <span class="preview-label">Live Preview</span>
-        <span class="preview-badge">submitInteraction() mocked</span>
-      </div>
-      <div class="preview-frame-wrap">
-        <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts"></iframe>
-      </div>
-    </div>
-  </div>
-
   <!-- History -->
   <div class="history-section" id="historySection">
     <div class="divider"></div>
@@ -683,6 +1114,193 @@ body {
   </div>
 
 </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- ── PHASE 2: REVIEW (Canvas)     ── -->
+<!-- ══════════════════════════════════ -->
+<div id="reviewPhase" class="phase">
+<div class="review-layout">
+
+  <!-- Left: Chat Panel -->
+  <div class="chat-panel">
+    <div class="chat-top-bar">
+      <button class="btn-back" onclick="backToCompose()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        New
+      </button>
+      <span class="chat-top-title">Refinement Chat</span>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <div class="chat-input-row">
+        <textarea class="chat-textarea" id="refineInput" rows="2" placeholder="Describe changes to refine the content..." onkeydown="handleRefineKey(event)"></textarea>
+        <button class="btn-send" id="refineBtn" onclick="refineContent()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Canvas Panel -->
+  <div class="canvas-panel">
+    <!-- Preview -->
+    <div class="canvas-preview" id="canvasPreviewWrap">
+      <div class="canvas-preview-header">
+        <span class="canvas-preview-label">Live Preview</span>
+        <span class="canvas-preview-badge">submitInteraction() mocked</span>
+      </div>
+      <div class="canvas-iframe-wrap">
+        <iframe id="canvasPreviewFrame" class="canvas-iframe" sandbox="allow-scripts"></iframe>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="canvas-tabs" id="canvasTabs">
+      <button class="canvas-tab active" data-tab="preview" onclick="switchTab('preview')">Preview</button>
+      <button class="canvas-tab" data-tab="html" onclick="switchTab('html')">HTML</button>
+      <button class="canvas-tab" data-tab="css" onclick="switchTab('css')">CSS</button>
+      <button class="canvas-tab" data-tab="js" onclick="switchTab('js')">JS</button>
+      <button class="canvas-tab" data-tab="grading" onclick="switchTab('grading')">Grading</button>
+      <button class="canvas-tab" data-tab="export" onclick="switchTab('export')">Export</button>
+    </div>
+
+    <!-- Tab: HTML -->
+    <div class="canvas-tab-content tab-panel" id="tabHtml">
+      <div class="tab-code-panel">
+        <div class="tab-code-header">
+          <span class="tab-code-lang html">HTML</span>
+          <button class="btn-copy" onclick="copyCode('codeHtml', this)">Copy</button>
+        </div>
+        <div class="tab-code-body"><pre id="codeHtml"></pre></div>
+      </div>
+    </div>
+
+    <!-- Tab: CSS -->
+    <div class="canvas-tab-content tab-panel" id="tabCss">
+      <div class="tab-code-panel">
+        <div class="tab-code-header">
+          <span class="tab-code-lang css">CSS</span>
+          <button class="btn-copy" onclick="copyCode('codeCss', this)">Copy</button>
+        </div>
+        <div class="tab-code-body"><pre id="codeCss"></pre></div>
+      </div>
+    </div>
+
+    <!-- Tab: JS -->
+    <div class="canvas-tab-content tab-panel" id="tabJs">
+      <div class="tab-code-panel">
+        <div class="tab-code-header">
+          <span class="tab-code-lang js">JavaScript</span>
+          <button class="btn-copy" onclick="copyCode('codeJs', this)">Copy</button>
+        </div>
+        <div class="tab-code-body"><pre id="codeJs"></pre></div>
+      </div>
+    </div>
+
+    <!-- Tab: Grading -->
+    <div class="canvas-tab-content tab-panel" id="tabGrading">
+      <div class="grading-form">
+        <div class="grading-section">
+          <div class="grading-section-label">Assessment Settings</div>
+
+          <div class="grading-row">
+            <span class="grading-label">Auto-grading</span>
+            <select class="grading-select" id="gcAutoGrade" onchange="updateGradingUI()">
+              <option value="0">Disabled</option>
+              <option value="1">Enabled</option>
+            </select>
+          </div>
+
+          <div class="grading-row">
+            <span class="grading-label">Weight (points)</span>
+            <input class="grading-input" id="gcWeight" type="number" min="0" value="1" style="max-width:100px;" onchange="updateStudioExport()" />
+          </div>
+
+          <div class="grading-row" id="gcModeRow" style="display:none;">
+            <span class="grading-label">Grading mode</span>
+            <select class="grading-select" id="gcMode" onchange="updateGradingUI()">
+              <option value="none">None (JS controls grading)</option>
+              <option value="single">Single answer</option>
+              <option value="multi">Multiple fields</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Single answer panel -->
+        <div class="grading-section grading-hidden" id="gcSinglePanel">
+          <div class="grading-section-label">Correct Answer</div>
+          <div class="grading-row">
+            <span class="grading-label">Expected answer</span>
+            <input class="grading-input" id="gcSingleAnswer" type="text" placeholder="e.g., Paris" oninput="updateStudioExport()" />
+          </div>
+        </div>
+
+        <!-- Multi-field panel -->
+        <div class="grading-section grading-hidden" id="gcMultiPanel">
+          <div class="grading-section-label">Answer Fields</div>
+          <div id="gcFieldsList"></div>
+          <button class="grading-add-btn" onclick="addGradingField('', '')">+ Add Field</button>
+        </div>
+
+        <!-- Feedback -->
+        <div class="grading-section">
+          <div class="grading-section-label">Feedback Messages</div>
+          <div class="grading-row">
+            <span class="grading-label">Correct feedback</span>
+            <input class="grading-input" id="gcCorrectFeedback" type="text" placeholder="e.g., Well done!" oninput="updateStudioExport()" />
+          </div>
+          <div class="grading-row">
+            <span class="grading-label">Incorrect feedback</span>
+            <input class="grading-input" id="gcIncorrectFeedback" type="text" placeholder="e.g., Try again." oninput="updateStudioExport()" />
+          </div>
+        </div>
+
+        <!-- Display options -->
+        <div class="grading-section">
+          <div class="grading-section-label">Display Options</div>
+          <div class="grading-row">
+            <span class="grading-label">Show feedback to learners</span>
+            <select class="grading-select" id="gcShowFeedback" onchange="updateStudioExport()">
+              <option value="1" selected>Yes</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+          <div class="grading-row">
+            <span class="grading-label">Show previous response</span>
+            <select class="grading-select" id="gcShowPrevious" onchange="updateStudioExport()">
+              <option value="1" selected>Yes</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Test Grading -->
+        <div class="test-grading-section">
+          <div class="grading-section-label">Test Grading</div>
+          <div class="test-input-area" id="gcTestInputs"></div>
+          <button class="btn-test" onclick="runGradingTest()">Run Test</button>
+          <div class="test-result" id="gcTestResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Export -->
+    <div class="canvas-tab-content tab-panel" id="tabExport">
+      <div class="export-section">
+        <div class="export-panel">
+          <div class="export-header">
+            <span class="export-label">Studio Configuration JSON</span>
+            <button class="btn-copy" onclick="copyCode('exportJson', this)">Copy</button>
+          </div>
+          <div class="export-body"><pre id="exportJson"></pre></div>
+        </div>
+        <p class="export-hint">Copy this JSON and paste the individual values into the XBlock Studio editor fields. The <code>correct_answers</code> object maps directly to the grading configuration.</p>
+      </div>
+    </div>
+
+  </div><!-- /canvas-panel -->
+
+</div><!-- /review-layout -->
+</div><!-- /reviewPhase -->
 
 <script>
 var SYSTEM_PROMPT = [
@@ -774,6 +1392,11 @@ var SYSTEM_PROMPT = [
 
 // ── State ──
 var apiKey = '';
+var appPhase = 'compose';
+var currentContent = null;  // { prompt, html, css, js }
+var chatMessages = [];
+var activeTab = 'preview';
+var isRefining = false;
 
 // ── Init ──
 function initApp() {
@@ -785,9 +1408,14 @@ function initApp() {
   updateGenerateBtn();
   document.getElementById('promptInput').addEventListener('input', updateGenerateBtn);
   renderHistory();
+  updateGradingUI();
+  updateTestInputs();
 }
 
-// ── API Key ──
+// ══════════════════════════════
+// ── API Key Management      ──
+// ══════════════════════════════
+
 function saveApiKey() {
   var val = document.getElementById('apiKeyInput').value.trim();
   if (!val) return;
@@ -811,25 +1439,25 @@ function showKeyStatus(text, cls) {
   el.className = 'key-status ' + cls;
 }
 
-// ── Prompt ──
+// ══════════════════════════════
+// ── Compose Phase            ──
+// ══════════════════════════════
+
 function setPrompt(chip) {
   document.getElementById('promptInput').value = chip.textContent;
   updateGenerateBtn();
 }
 
-// ── Button State ──
 function updateGenerateBtn() {
   var key = apiKey || localStorage.getItem('gemini_api_key') || '';
   var prompt = document.getElementById('promptInput').value.trim();
   document.getElementById('generateBtn').disabled = !key || !prompt;
 }
 
-// ── Info ──
 function toggleInfo() {
   document.getElementById('infoTooltip').classList.toggle('visible');
 }
 
-// ── Error ──
 function showError(msg) {
   document.getElementById('errorMessage').textContent = msg;
   document.getElementById('errorAlert').classList.add('visible');
@@ -838,7 +1466,62 @@ function hideError() {
   document.getElementById('errorAlert').classList.remove('visible');
 }
 
-// ── Generate ──
+// ══════════════════════════════
+// ── Phase Transitions        ──
+// ══════════════════════════════
+
+function setPhase(phase) {
+  appPhase = phase;
+  document.getElementById('composePhase').classList.toggle('active', phase === 'compose');
+  document.getElementById('reviewPhase').classList.toggle('active', phase === 'review');
+  if (phase === 'compose') {
+    document.body.style.overflow = '';
+  } else {
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function enterReviewPhase(prompt, html, css, js, fromHistory) {
+  currentContent = { prompt: prompt, html: html, css: css, js: js };
+
+  // Populate code panels
+  document.getElementById('codeHtml').textContent = html;
+  document.getElementById('codeCss').textContent = css;
+  document.getElementById('codeJs').textContent = js;
+
+  // Render preview
+  renderCanvasPreview(html, css, js);
+
+  // Reset chat
+  if (!fromHistory) {
+    chatMessages = [];
+    addChatMessage('user', prompt);
+    addChatMessage('ai', 'Content generated successfully.', 'success');
+  }
+  renderChatMessages();
+
+  // Reset grading to defaults
+  resetGradingConfig();
+
+  // Update export
+  updateStudioExport();
+
+  // Switch to preview tab
+  switchTab('preview');
+
+  // Show review phase
+  setPhase('review');
+}
+
+function backToCompose() {
+  setPhase('compose');
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════
+// ── Generate Content         ──
+// ══════════════════════════════
+
 function generateContent() {
   var key = apiKey || localStorage.getItem('gemini_api_key') || '';
   var prompt = document.getElementById('promptInput').value.trim();
@@ -847,49 +1530,23 @@ function generateContent() {
   hideError();
   setLoading(true);
 
-  var url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=' + encodeURIComponent(key);
+  callGeminiAPI(key, SYSTEM_PROMPT + '\n\nUser request: ' + prompt, function(text) {
+    var parsed = parseCodeBlocks(text);
+    if (!parsed.html && !parsed.css && !parsed.js) {
+      showError('The AI response did not contain the expected code blocks.');
+      setLoading(false);
+      return;
+    }
 
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: SYSTEM_PROMPT + '\n\nUser request: ' + prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
-    })
-  })
-  .then(function(res) {
-    if (!res.ok) {
-      return res.json().then(function(body) {
-        var msg = 'API error (' + res.status + ')';
-        if (res.status === 400) msg = 'Invalid request \u2014 check your API key.';
-        else if (res.status === 403) msg = 'API key unauthorized \u2014 verify the key has Generative Language API access.';
-        else if (res.status === 429) msg = 'Rate limit exceeded \u2014 wait a moment and try again.';
-        else if (body && body.error && body.error.message) msg = body.error.message;
-        throw new Error(msg);
-      }).catch(function(e) {
-        if (e.message) throw e;
-        throw new Error('API error (' + res.status + ')');
-      });
+    // Save to history
+    if (prompt && (parsed.html || parsed.js)) {
+      saveToHistory(prompt, parsed.html, parsed.css, parsed.js);
     }
-    return res.json();
-  })
-  .then(function(data) {
-    var text = '';
-    try {
-      text = data.candidates[0].content.parts[0].text;
-    } catch (e) {
-      throw new Error('Unexpected response format from Gemini.');
-    }
-    parseAndDisplay(text);
-  })
-  .catch(function(err) {
-    if (err.message && err.message.indexOf('fetch') !== -1) {
-      showError('Network error \u2014 check your connection.');
-    } else {
-      showError(err.message || 'An unknown error occurred.');
-    }
-  })
-  .finally(function() {
+
+    setLoading(false);
+    enterReviewPhase(prompt, parsed.html, parsed.css, parsed.js, false);
+  }, function(errMsg) {
+    showError(errMsg);
     setLoading(false);
   });
 }
@@ -906,53 +1563,77 @@ function setLoading(on) {
   }
 }
 
-// ── Parse & Display ──
-function parseAndDisplay(text) {
+// ══════════════════════════════
+// ── Gemini API               ──
+// ══════════════════════════════
+
+function callGeminiAPI(key, prompt, onSuccess, onError) {
+  var url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=' + encodeURIComponent(key);
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
+    })
+  })
+  .then(function(res) {
+    if (!res.ok) {
+      return res.json().then(function(body) {
+        var msg = 'API error (' + res.status + ')';
+        if (res.status === 400) msg = 'Invalid request \u2014 check your API key.';
+        else if (res.status === 403) msg = 'API key unauthorized.';
+        else if (res.status === 429) msg = 'Rate limit exceeded \u2014 wait a moment.';
+        else if (body && body.error && body.error.message) msg = body.error.message;
+        throw new Error(msg);
+      }).catch(function(e) {
+        if (e.message) throw e;
+        throw new Error('API error (' + res.status + ')');
+      });
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    var text = '';
+    try {
+      text = data.candidates[0].content.parts[0].text;
+    } catch (e) {
+      throw new Error('Unexpected response format from Gemini.');
+    }
+    onSuccess(text);
+  })
+  .catch(function(err) {
+    var msg = err.message || 'An unknown error occurred.';
+    if (msg.indexOf('fetch') !== -1) msg = 'Network error \u2014 check your connection.';
+    onError(msg);
+  });
+}
+
+// ══════════════════════════════
+// ── Parse Code Blocks        ──
+// ══════════════════════════════
+
+function parseCodeBlocks(text) {
   var htmlMatch = text.match(/```html\s*\n([\s\S]*?)```/);
   var cssMatch = text.match(/```css\s*\n([\s\S]*?)```/);
   var jsMatch = text.match(/```(?:js|javascript)\s*\n([\s\S]*?)```/);
-
-  var htmlCode = htmlMatch ? htmlMatch[1].trim() : '';
-  var cssCode = cssMatch ? cssMatch[1].trim() : '';
-  var jsCode = jsMatch ? jsMatch[1].trim() : '';
-
-  if (!htmlCode && !cssCode && !jsCode) {
-    showError('The AI response did not contain the expected code blocks. Raw output shown below.');
-    htmlCode = text;
-  }
-
-  document.getElementById('htmlCode').textContent = htmlCode;
-  document.getElementById('cssCode').textContent = cssCode;
-  document.getElementById('jsCode').textContent = jsCode;
-  document.getElementById('outputSection').classList.add('visible');
-
-  // Save to history
-  var prompt = document.getElementById('promptInput').value.trim();
-  if (prompt && (htmlCode || jsCode)) {
-    saveToHistory(prompt, htmlCode, cssCode, jsCode);
-  }
-
-  // Render preview
-  renderPreview(htmlCode, cssCode, jsCode);
-
-  // Scroll to output
-  setTimeout(function() {
-    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
+  return {
+    html: htmlMatch ? htmlMatch[1].trim() : '',
+    css: cssMatch ? cssMatch[1].trim() : '',
+    js: jsMatch ? jsMatch[1].trim() : ''
+  };
 }
 
-// ── Preview ──
-function renderPreview(html, css, js) {
-  var frame = document.getElementById('previewFrame');
-  var section = document.getElementById('previewSection');
+// ══════════════════════════════
+// ── Canvas Preview           ──
+// ══════════════════════════════
 
-  if (!html && !js) {
-    section.classList.remove('visible');
-    return;
-  }
+function renderCanvasPreview(html, css, js) {
+  var frame = document.getElementById('canvasPreviewFrame');
 
-  // Build a self-contained HTML document for the iframe.
-  // Includes a mock submitInteraction that shows a toast with the data.
+  if (!html && !js) return;
+
   var doc = [
     '<!DOCTYPE html>',
     '<html><head><meta charset="UTF-8">',
@@ -997,12 +1678,172 @@ function renderPreview(html, css, js) {
     '</body></html>'
   ].join('\n');
 
-  // Write to iframe via srcdoc
   frame.srcdoc = doc;
-  section.classList.add('visible');
 }
 
-// ── Copy ──
+// ══════════════════════════════
+// ── Tab Switching            ──
+// ══════════════════════════════
+
+function switchTab(tabName) {
+  activeTab = tabName;
+
+  // Update tab buttons
+  var tabs = document.querySelectorAll('.canvas-tab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === tabName);
+  }
+
+  // Show/hide preview
+  var previewWrap = document.getElementById('canvasPreviewWrap');
+  previewWrap.style.display = (tabName === 'preview') ? 'flex' : 'none';
+
+  // Show/hide tab content panels
+  var tabIds = { html: 'tabHtml', css: 'tabCss', js: 'tabJs', grading: 'tabGrading', export: 'tabExport' };
+  for (var key in tabIds) {
+    var el = document.getElementById(tabIds[key]);
+    el.classList.toggle('active', key === tabName);
+  }
+
+  // Update export when switching to export tab
+  if (tabName === 'export') {
+    updateStudioExport();
+  }
+  // Update test inputs when switching to grading tab
+  if (tabName === 'grading') {
+    updateTestInputs();
+  }
+}
+
+// ══════════════════════════════
+// ── Chat Messages            ──
+// ══════════════════════════════
+
+function addChatMessage(role, text, status) {
+  chatMessages.push({
+    role: role,
+    text: text,
+    status: status || '',
+    time: new Date()
+  });
+}
+
+function renderChatMessages() {
+  var container = document.getElementById('chatMessages');
+  container.innerHTML = '';
+  for (var i = 0; i < chatMessages.length; i++) {
+    var msg = chatMessages[i];
+    var div = document.createElement('div');
+    var cls = 'chat-msg ' + msg.role;
+    if (msg.status) cls += ' ' + msg.status;
+    div.className = cls;
+
+    var timeStr = msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = escapeHtml(msg.text) + '<div class="chat-msg-time">' + timeStr + '</div>';
+    container.appendChild(div);
+  }
+  // Scroll to bottom
+  container.scrollTop = container.scrollHeight;
+}
+
+// ══════════════════════════════
+// ── Refine Content           ──
+// ══════════════════════════════
+
+function handleRefineKey(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    refineContent();
+  }
+}
+
+function refineContent() {
+  if (isRefining) return;
+  var input = document.getElementById('refineInput');
+  var text = input.value.trim();
+  if (!text || !currentContent) return;
+
+  var key = apiKey || localStorage.getItem('gemini_api_key') || '';
+  if (!key) {
+    addChatMessage('ai', 'API key not set. Go back and save your Gemini API key.', 'error');
+    renderChatMessages();
+    return;
+  }
+
+  // Add user message
+  addChatMessage('user', text);
+  input.value = '';
+
+  // Add loading message
+  addChatMessage('ai', 'Refining content\u2026', 'loading');
+  renderChatMessages();
+
+  isRefining = true;
+  setRefineLoading(true);
+
+  // Build context-aware prompt
+  var refinePrompt = SYSTEM_PROMPT +
+    '\n\nHere is the current content that needs to be refined:\n\n' +
+    '```html\n' + currentContent.html + '\n```\n\n' +
+    '```css\n' + currentContent.css + '\n```\n\n' +
+    '```js\n' + currentContent.js + '\n```\n\n' +
+    'User refinement request: ' + text;
+
+  callGeminiAPI(key, refinePrompt, function(responseText) {
+    var parsed = parseCodeBlocks(responseText);
+
+    if (!parsed.html && !parsed.css && !parsed.js) {
+      // Remove loading message, add error
+      chatMessages.pop();
+      addChatMessage('ai', 'Could not parse the refined code. The AI may not have returned code blocks.', 'error');
+      renderChatMessages();
+      isRefining = false;
+      setRefineLoading(false);
+      return;
+    }
+
+    // Update current content
+    currentContent.html = parsed.html;
+    currentContent.css = parsed.css;
+    currentContent.js = parsed.js;
+
+    // Update UI
+    document.getElementById('codeHtml').textContent = parsed.html;
+    document.getElementById('codeCss').textContent = parsed.css;
+    document.getElementById('codeJs').textContent = parsed.js;
+    renderCanvasPreview(parsed.html, parsed.css, parsed.js);
+    updateStudioExport();
+
+    // Update history
+    saveToHistory(currentContent.prompt + ' [refined]', parsed.html, parsed.css, parsed.js);
+
+    // Remove loading message, add success
+    chatMessages.pop();
+    addChatMessage('ai', 'Content refined successfully.', 'success');
+    renderChatMessages();
+
+    isRefining = false;
+    setRefineLoading(false);
+  }, function(errMsg) {
+    // Remove loading message, add error
+    chatMessages.pop();
+    addChatMessage('ai', 'Error: ' + errMsg, 'error');
+    renderChatMessages();
+    isRefining = false;
+    setRefineLoading(false);
+  });
+}
+
+function setRefineLoading(on) {
+  var btn = document.getElementById('refineBtn');
+  btn.disabled = on;
+  btn.textContent = on ? 'Sending\u2026' : 'Send';
+}
+
+// ══════════════════════════════
+// ── Copy Code                ──
+// ══════════════════════════════
+
 function copyCode(id, btn) {
   var text = document.getElementById(id).textContent;
   if (!text) return;
@@ -1036,7 +1877,10 @@ function fallbackCopy(text, cb) {
   document.body.removeChild(ta);
 }
 
-// ── History ──
+// ══════════════════════════════
+// ── History                  ──
+// ══════════════════════════════
+
 function getHistory() {
   try { return JSON.parse(localStorage.getItem('xblock_gen_history') || '[]'); }
   catch(e) { return []; }
@@ -1051,7 +1895,6 @@ function saveToHistory(prompt, html, css, js) {
     js: js,
     time: new Date().toISOString()
   });
-  // Keep last 20
   if (history.length > 20) history = history.slice(0, 20);
   localStorage.setItem('xblock_gen_history', JSON.stringify(history));
   renderHistory();
@@ -1060,7 +1903,6 @@ function saveToHistory(prompt, html, css, js) {
 function renderHistory() {
   var list = document.getElementById('historyList');
   var history = getHistory();
-  var section = document.getElementById('historySection');
   var clearBtn = document.getElementById('clearHistoryBtn');
 
   if (history.length === 0) {
@@ -1094,18 +1936,12 @@ function loadHistoryItem(idx) {
   var item = history[idx];
   if (!item) return;
 
-  document.getElementById('htmlCode').textContent = item.html || '';
-  document.getElementById('cssCode').textContent = item.css || '';
-  document.getElementById('jsCode').textContent = item.js || '';
-  document.getElementById('outputSection').classList.add('visible');
-  document.getElementById('promptInput').value = item.prompt || '';
-  updateGenerateBtn();
+  // Set up chat messages for history load
+  chatMessages = [];
+  addChatMessage('user', item.prompt);
+  addChatMessage('ai', 'Loaded from history.', 'success');
 
-  renderPreview(item.html || '', item.css || '', item.js || '');
-
-  setTimeout(function() {
-    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
+  enterReviewPhase(item.prompt, item.html || '', item.css || '', item.js || '', true);
 }
 
 function deleteHistoryItem(idx) {
@@ -1124,6 +1960,287 @@ function escapeHtml(text) {
   var d = document.createElement('div');
   d.textContent = text;
   return d.innerHTML;
+}
+
+// ══════════════════════════════
+// ── Grading Configuration    ──
+// ══════════════════════════════
+
+function resetGradingConfig() {
+  document.getElementById('gcAutoGrade').value = '0';
+  document.getElementById('gcWeight').value = '1';
+  document.getElementById('gcMode').value = 'none';
+  document.getElementById('gcSingleAnswer').value = '';
+  document.getElementById('gcFieldsList').innerHTML = '';
+  document.getElementById('gcCorrectFeedback').value = '';
+  document.getElementById('gcIncorrectFeedback').value = '';
+  document.getElementById('gcShowFeedback').value = '1';
+  document.getElementById('gcShowPrevious').value = '1';
+  document.getElementById('gcTestResult').className = 'test-result';
+  document.getElementById('gcTestResult').innerHTML = '';
+  updateGradingUI();
+}
+
+function updateGradingUI() {
+  var autoGrade = document.getElementById('gcAutoGrade').value === '1';
+  var mode = document.getElementById('gcMode').value;
+
+  document.getElementById('gcModeRow').style.display = autoGrade ? 'flex' : 'none';
+  document.getElementById('gcSinglePanel').style.display = (autoGrade && mode === 'single') ? 'block' : 'none';
+  document.getElementById('gcMultiPanel').style.display = (autoGrade && mode === 'multi') ? 'block' : 'none';
+
+  updateTestInputs();
+  updateStudioExport();
+}
+
+function addGradingField(name, value) {
+  var list = document.getElementById('gcFieldsList');
+  var row = document.createElement('div');
+  row.className = 'grading-field-row';
+  row.innerHTML =
+    '<input class="grading-field-input grading-field-name" type="text" placeholder="Field name" value="' + escapeAttr(name) + '" oninput="updateStudioExport();updateTestInputs()" />' +
+    '<input class="grading-field-input grading-field-value" type="text" placeholder="Expected value" value="' + escapeAttr(value) + '" oninput="updateStudioExport()" />' +
+    '<button class="grading-remove-btn" onclick="this.parentNode.remove();updateStudioExport();updateTestInputs()">&times;</button>';
+  list.appendChild(row);
+  updateStudioExport();
+  updateTestInputs();
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function buildGradingConfig() {
+  var result = {};
+  var autoGrade = document.getElementById('gcAutoGrade').value === '1';
+  var mode = document.getElementById('gcMode').value;
+
+  var cf = document.getElementById('gcCorrectFeedback').value.trim();
+  var icf = document.getElementById('gcIncorrectFeedback').value.trim();
+  if (cf) result.correct_feedback = cf;
+  if (icf) result.incorrect_feedback = icf;
+
+  if (autoGrade && mode === 'single') {
+    var answer = document.getElementById('gcSingleAnswer').value.trim();
+    if (answer) result.answer = answer;
+  } else if (autoGrade && mode === 'multi') {
+    var fields = {};
+    var rows = document.querySelectorAll('#gcFieldsList .grading-field-row');
+    for (var i = 0; i < rows.length; i++) {
+      var fname = rows[i].querySelector('.grading-field-name').value.trim();
+      var fval = rows[i].querySelector('.grading-field-value').value.trim();
+      if (fname) fields[fname] = fval;
+    }
+    if (Object.keys(fields).length > 0) result.fields = fields;
+  }
+
+  return result;
+}
+
+// ══════════════════════════════
+// ── Test Grading             ──
+// ══════════════════════════════
+
+function updateTestInputs() {
+  var container = document.getElementById('gcTestInputs');
+  var autoGrade = document.getElementById('gcAutoGrade').value === '1';
+  var mode = document.getElementById('gcMode').value;
+  container.innerHTML = '';
+
+  // Hide previous result
+  var resultEl = document.getElementById('gcTestResult');
+  resultEl.className = 'test-result';
+
+  if (!autoGrade || mode === 'none') {
+    container.innerHTML =
+      '<div class="test-input-area">' +
+        '<div class="test-input-label">Test JSON payload</div>' +
+        '<textarea class="test-json-textarea" id="testJsonInput" rows="3" placeholder=\'{"answer": "4", "correct": true}\'></textarea>' +
+      '</div>';
+  } else if (mode === 'single') {
+    container.innerHTML =
+      '<div class="test-input-area">' +
+        '<div class="test-input-label">Test Answer</div>' +
+        '<input class="test-single-input" id="testSingleInput" type="text" placeholder="Type a test answer..." />' +
+      '</div>';
+  } else if (mode === 'multi') {
+    var rows = document.querySelectorAll('#gcFieldsList .grading-field-row');
+    var html = '';
+    var hasFields = false;
+    for (var i = 0; i < rows.length; i++) {
+      var fname = rows[i].querySelector('.grading-field-name').value.trim();
+      if (fname) {
+        hasFields = true;
+        html +=
+          '<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">' +
+            '<span class="test-input-label" style="min-width:120px;margin:0;">' + escapeHtml(fname) + '</span>' +
+            '<input class="test-multi-input" type="text" data-field="' + escapeAttr(fname) + '" placeholder="Test value..." style="flex:1;" />' +
+          '</div>';
+      }
+    }
+    if (!hasFields) {
+      html = '<span style="font-size:0.82rem;color:var(--ink-tertiary);font-style:italic;">Add answer fields above first.</span>';
+    }
+    container.innerHTML = '<div class="test-input-area">' + html + '</div>';
+  }
+}
+
+function evaluateTestResponse(data, config, weight) {
+  // Path 1: JS-provided correct boolean
+  if ('correct' in data && typeof data.correct === 'boolean') {
+    var isCorrect = data.correct;
+    return {
+      isCorrect: isCorrect,
+      score: isCorrect ? weight : 0.0,
+      feedback: data.feedback || (
+        isCorrect
+          ? (config.correct_feedback || 'Correct!')
+          : (config.incorrect_feedback || 'Incorrect. Try again.')
+      )
+    };
+  }
+
+  // Path 2: no config
+  if (!config || Object.keys(config).length === 0) {
+    return { isCorrect: false, score: 0.0, feedback: 'No grading configuration.' };
+  }
+
+  // Path 3a: single answer match
+  if ('answer' in data && 'answer' in config) {
+    var userAnswer = String(data.answer).trim().toLowerCase();
+    var correctAnswer = String(config.answer).trim().toLowerCase();
+    var correct = userAnswer === correctAnswer;
+    return {
+      isCorrect: correct,
+      score: correct ? weight : 0.0,
+      feedback: correct
+        ? (config.correct_feedback || 'Correct!')
+        : (config.incorrect_feedback || 'Incorrect. Try again.')
+    };
+  }
+
+  // Path 3b: multi-field match
+  if (config.fields && typeof config.fields === 'object') {
+    var totalFields = Object.keys(config.fields).length;
+    var correctFields = 0;
+    for (var fieldName in config.fields) {
+      if (fieldName in data) {
+        var userVal = String(data[fieldName]).trim().toLowerCase();
+        var expected = String(config.fields[fieldName]).trim().toLowerCase();
+        if (userVal === expected) correctFields++;
+      }
+    }
+    var allCorrect = correctFields === totalFields;
+    var score = totalFields > 0 ? (correctFields / totalFields) * weight : 0.0;
+    return {
+      isCorrect: allCorrect,
+      score: Math.round(score * 100) / 100,
+      feedback: allCorrect
+        ? (config.correct_feedback || 'All answers correct!')
+        : (config.incorrect_feedback || correctFields + '/' + totalFields + ' answers correct.'),
+      correctFields: correctFields,
+      totalFields: totalFields
+    };
+  }
+
+  return { isCorrect: false, score: 0.0, feedback: 'No matching answer fields found.' };
+}
+
+function runGradingTest() {
+  var autoGrade = document.getElementById('gcAutoGrade').value === '1';
+  var mode = document.getElementById('gcMode').value;
+  var weight = parseInt(document.getElementById('gcWeight').value) || 1;
+  var config = buildGradingConfig();
+  var data = {};
+
+  if (!autoGrade || mode === 'none') {
+    var rawEl = document.getElementById('testJsonInput');
+    var raw = rawEl ? rawEl.value.trim() : '';
+    if (!raw) {
+      showTestResult(null, 'Please enter a test JSON payload.');
+      return;
+    }
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      showTestResult(null, 'Invalid JSON: ' + err.message);
+      return;
+    }
+  } else if (mode === 'single') {
+    var singleEl = document.getElementById('testSingleInput');
+    var val = singleEl ? singleEl.value : '';
+    if (val === undefined || val.trim() === '') {
+      showTestResult(null, 'Please enter a test answer.');
+      return;
+    }
+    data = { answer: val.trim() };
+  } else if (mode === 'multi') {
+    var multiInputs = document.querySelectorAll('.test-multi-input');
+    for (var i = 0; i < multiInputs.length; i++) {
+      var field = multiInputs[i].getAttribute('data-field');
+      if (field) data[field] = multiInputs[i].value.trim();
+    }
+  }
+
+  var result = evaluateTestResponse(data, config, weight);
+  showTestResult(result, null);
+}
+
+function showTestResult(result, errorMsg) {
+  var container = document.getElementById('gcTestResult');
+
+  if (errorMsg) {
+    container.className = 'test-result visible warn';
+    container.innerHTML = '<strong>Error:</strong> ' + escapeHtml(errorMsg);
+    return;
+  }
+
+  var weight = parseInt(document.getElementById('gcWeight').value) || 1;
+  var icon = result.isCorrect ? '\u2713' : '\u2717';
+  var status = result.isCorrect ? 'Correct' : 'Incorrect';
+  var cls = result.isCorrect ? 'correct' : 'incorrect';
+
+  var html = '<div style="margin-bottom:6px;"><strong style="font-size:1.05em;">' + icon + ' ' + status + '</strong></div>' +
+    '<div>Score: <strong>' + result.score + ' / ' + weight + '</strong></div>';
+
+  if (result.totalFields !== undefined) {
+    html += '<div>Fields: ' + result.correctFields + ' / ' + result.totalFields + ' correct</div>';
+  }
+
+  if (result.feedback) {
+    html += '<div style="margin-top:6px;">Feedback: <em>' + escapeHtml(result.feedback) + '</em></div>';
+  }
+
+  container.className = 'test-result visible ' + cls;
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════
+// ── Studio Export            ──
+// ══════════════════════════════
+
+function updateStudioExport() {
+  if (!currentContent) return;
+
+  var promptLabel = currentContent.prompt || '';
+  if (promptLabel.length > 40) promptLabel = promptLabel.substring(0, 40) + '\u2026';
+
+  var exportData = {
+    display_name: 'Generated: ' + promptLabel,
+    html_content: currentContent.html,
+    css_content: currentContent.css,
+    js_content: currentContent.js,
+    auto_grade_enabled: document.getElementById('gcAutoGrade').value === '1',
+    weight: parseInt(document.getElementById('gcWeight').value) || 1,
+    correct_answers: buildGradingConfig(),
+    show_feedback_to_learners: document.getElementById('gcShowFeedback').value === '1',
+    show_previous_response: document.getElementById('gcShowPrevious').value === '1'
+  };
+
+  var el = document.getElementById('exportJson');
+  if (el) {
+    el.textContent = JSON.stringify(exportData, null, 2);
+  }
 }
 
 // ── Close tooltip on outside click ──
