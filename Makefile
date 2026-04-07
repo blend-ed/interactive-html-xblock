@@ -5,8 +5,8 @@
 .PHONY: detect_changed_source_translations dummy_translations build_dummy_translations
 .PHONY: validate_translations pull_translations install_transifex_clients
 
-REPO_NAME := interactive-xblock
-PACKAGE_NAME := interactive_xblock
+REPO_NAME := interactive-content-xblock
+PACKAGE_NAME := interactive_content_xblock
 EXTRACT_DIR := $(PACKAGE_NAME)/conf/locale/en/LC_MESSAGES
 JS_TARGET := $(PACKAGE_NAME)/public/js/translations
 
@@ -73,7 +73,7 @@ extract_translations: ## extract strings to be translated, outputting .po files
 
 compile_translations: ## compile translation files, outputting .mo files for each supported language
 	cd $(PACKAGE_NAME) && i18n_tool generate
-	python manage.py compilejsi18n --namespace InteractiveXblockI18n --output $(JS_TARGET)
+	python manage.py compilejsi18n --namespace InteractiveContentXblockI18n --output $(JS_TARGET)
 
 detect_changed_source_translations:
 	cd $(PACKAGE_NAME) && i18n_tool changed

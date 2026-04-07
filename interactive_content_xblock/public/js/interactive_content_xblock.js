@@ -1,6 +1,6 @@
-/* InteractiveXBlock JavaScript */
+/* InteractiveContentXBlock JavaScript */
 
-function InteractiveXBlockView(runtime, element) {
+function InteractiveContentXBlockView(runtime, element) {
     'use strict';
 
     // Initialize the view
@@ -32,7 +32,7 @@ function InteractiveXBlockView(runtime, element) {
                 script.textContent = jsElement.textContent;
                 document.head.appendChild(script);
             } catch (e) {
-                console.error('InteractiveXBlock: Error executing author JavaScript:', e);
+                console.error('InteractiveContentXBlock: Error executing author JavaScript:', e);
             }
         }
     }
@@ -40,7 +40,7 @@ function InteractiveXBlockView(runtime, element) {
     // Global submitInteraction function
     function submitInteraction(data) {
         if (!runtime || !runtime.handlerUrl) {
-            console.error('InteractiveXBlock: Runtime not available - cannot save interaction');
+            console.error('InteractiveContentXBlock: Runtime not available - cannot save interaction');
             return;
         }
 
@@ -60,11 +60,11 @@ function InteractiveXBlockView(runtime, element) {
                         showFeedback(response);
                     }
                 } else {
-                    console.error('InteractiveXBlock Error:', response.message);
+                    console.error('InteractiveContentXBlock Error:', response.message);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('InteractiveXBlock: Error saving interaction:', error);
+                console.error('InteractiveContentXBlock: Error saving interaction:', error);
             }
         });
     }

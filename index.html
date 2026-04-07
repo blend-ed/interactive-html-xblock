@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>InteractiveXBlock Content Generator</title>
+<title>InteractiveContentXBlock Content Generator</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
@@ -1053,12 +1053,12 @@ body {
 
   <!-- Header -->
   <header class="header">
-    <div class="header-eyebrow">InteractiveXBlock</div>
+    <div class="header-eyebrow">InteractiveContentXBlock</div>
     <h1>Content <em>Generator</em></h1>
     <p class="header-sub">Describe the interactive exercise you need and let AI generate XBlock-ready HTML, CSS, and JavaScript.</p>
     <button class="info-trigger" onclick="toggleInfo()" aria-label="Info">?</button>
     <div class="info-tooltip" id="infoTooltip">
-      This tool uses the Gemini API to generate content compatible with the InteractiveXBlock XBlock for Open edX. Your API key is stored only in your browser's localStorage and is sent directly to Google's API &mdash; never to any other server.
+      This tool uses the Gemini API to generate content compatible with the InteractiveContentXBlock XBlock for Open edX. Your API key is stored only in your browser's localStorage and is sent directly to Google's API &mdash; never to any other server.
     </div>
   </header>
 
@@ -1110,7 +1110,7 @@ body {
   </div>
 
   <div class="footer">
-    Built for <a href="https://github.com/blend-ed/interactive-xblock" target="_blank">InteractiveXBlock</a> &middot; Powered by Gemini
+    Built for <a href="https://github.com/blend-ed/interactive-content-xblock" target="_blank">InteractiveContentXBlock</a> &middot; Powered by Gemini
   </div>
 
 </div>
@@ -1304,7 +1304,7 @@ body {
 
 <script>
 var SYSTEM_PROMPT = [
-  'You are an expert content developer for the Open edX InteractiveXBlock XBlock. Generate interactive educational content as three separate code blocks: HTML, CSS, and JavaScript.',
+  'You are an expert content developer for the Open edX InteractiveContentXBlock XBlock. Generate interactive educational content as three separate code blocks: HTML, CSS, and JavaScript.',
   '',
   '## How the XBlock Works',
   'The XBlock renders author content inside an Open edX course:',

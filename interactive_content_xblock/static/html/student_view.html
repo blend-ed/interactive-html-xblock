@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% if html_content %}
-<div class="interactive-xblock" data-block-id="{{ block_id }}">
+<div class="interactive-content-xblock" data-block-id="{{ block_id }}">
     <!-- Debug Panel (Staff Only) -->
     {% if enable_debug_mode and is_staff %}
     <div class="debug-panel" id="debug-panel">
@@ -71,7 +71,7 @@
     <script id="author-js" type="text/plain">{{ js_content|safe }}</script>
 </div>
 {% else %}
-<div class="interactive-xblock">
+<div class="interactive-content-xblock">
     <p>{% trans "No content. Please add HTML content in the studio." %}</p>
 </div>
 {% endif %} 

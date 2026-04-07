@@ -4,7 +4,7 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: 'interactive-xblock'
+  name: 'interactive-content-xblock'
   description: 'Open edX XBlock for creating interactive HTML/CSS/JS content with learner interaction tracking and auto-grading.'
   annotations:
     openedx.org/release: null

@@ -1,5 +1,5 @@
 """
-This is the core logic for the InteractiveXBlock
+This is the core logic for the InteractiveContentXBlock
 """
 from xblock.core import XBlock
 try:
@@ -9,15 +9,15 @@ except ImportError:
     class CompletableXBlockMixin:
         pass
 
-from .models import InteractiveXBlockModelMixin
-from .views import InteractiveXBlockViewMixin
+from .models import InteractiveContentXBlockModelMixin
+from .views import InteractiveContentXBlockViewMixin
 
 
 @XBlock.wants('user')
 @XBlock.wants('i18n')
-class InteractiveXBlock(
-        InteractiveXBlockModelMixin,
-        InteractiveXBlockViewMixin,
+class InteractiveContentXBlock(
+        InteractiveContentXBlockModelMixin,
+        InteractiveContentXBlockViewMixin,
         CompletableXBlockMixin,
         XBlock,
 ):
@@ -33,18 +33,18 @@ class InteractiveXBlock(
     def workbench_scenarios():
         """Create canned scenarios for display in the workbench."""
         return [
-            ("InteractiveXBlock",
-             """<interactive_xblock/>
+            ("InteractiveContentXBlock",
+             """<interactive_content_xblock/>
              """),
-            ("Multiple InteractiveXBlock",
+            ("Multiple InteractiveContentXBlock",
              """<vertical_demo>
-                <interactive_xblock/>
-                <interactive_xblock/>
-                <interactive_xblock/>
+                <interactive_content_xblock/>
+                <interactive_content_xblock/>
+                <interactive_content_xblock/>
                 </vertical_demo>
              """),
-            ("InteractiveXBlock with Quiz",
-             """<interactive_xblock>
+            ("InteractiveContentXBlock with Quiz",
+             """<interactive_content_xblock>
                 <html_content>
                 <div class="quiz">
                   <h3>Geography Quiz</h3>
@@ -93,6 +93,6 @@ class InteractiveXBlock(
                   });
                 }
                 </js_content>
-                </interactive_xblock>
+                </interactive_content_xblock>
              """),
         ] 

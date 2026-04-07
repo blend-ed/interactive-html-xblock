@@ -1,0 +1,9 @@
+/* CSS for HTMLPlusBlock */
+
+.interactive_content_xblock_block .count {
+    font-weight: bold;
+}
+
+.interactive_content_xblock_block p {
+    cursor: pointer;
+}

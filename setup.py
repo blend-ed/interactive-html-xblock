@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Package metadata for interactive-xblock.
+Package metadata for interactive-content-xblock.
 """
 import os
 import re
@@ -134,7 +134,7 @@ def package_data(pkg, roots):
     return {pkg: data}
 
 
-VERSION = get_version('interactive_xblock', '__init__.py')
+VERSION = get_version('interactive_content_xblock', '__init__.py')
 
 if sys.argv[-1] == 'tag':
     print("Tagging the version on github:")
@@ -146,16 +146,16 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding="u
 CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst'), encoding="utf8").read()
 
 setup(
-    name='interactive-xblock',
+    name='interactive-content-xblock',
     version=VERSION,
     description='Open edX XBlock for creating interactive HTML/CSS/JS content with learner interaction tracking and auto-grading.',
     long_description=README + '\n\n' + CHANGELOG,
     author='Zameel Hassan',
     author_email='zameel@blend-ed.com',
-    url='https://github.com/blend-ed/interactive-xblock',
+    url='https://github.com/blend-ed/interactive-content-xblock',
     license='AGPL-3.0',
     packages=find_packages(
-        include=['interactive_xblock', 'interactive_xblock.*'],
+        include=['interactive_content_xblock', 'interactive_content_xblock.*'],
         exclude=["*tests"],
     ),
 
@@ -176,9 +176,9 @@ setup(
     ],
     entry_points={
         'xblock.v1': [
-            'interactive_xblock = interactive_xblock:InteractiveXBlock',
+            'interactive_content_xblock = interactive_content_xblock:InteractiveContentXBlock',
         ]
     },
-    package_data=package_data("interactive_xblock", ["static", "public", "css", "templates"]),
+    package_data=package_data("interactive_content_xblock", ["static", "public", "css", "templates"]),
 
 )

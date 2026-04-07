@@ -1,5 +1,5 @@
 """
-Handle view logic for the InteractiveXBlock
+Handle view logic for the InteractiveContentXBlock
 """
 import json
 import datetime
@@ -25,13 +25,13 @@ except ModuleNotFoundError:  # pragma: no cover
 log = logging.getLogger(__name__)
 
 
-class InteractiveXBlockViewMixin(StudioEditableXBlockMixin):
+class InteractiveContentXBlockViewMixin(StudioEditableXBlockMixin):
     """
-    Handle view logic for InteractiveXBlock instances
+    Handle view logic for InteractiveContentXBlock instances
     """
 
     loader = ResourceLoader(__name__)
-    static_js_init = 'InteractiveXBlockView'
+    static_js_init = 'InteractiveContentXBlockView'
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
@@ -69,7 +69,7 @@ class InteractiveXBlockViewMixin(StudioEditableXBlockMixin):
 
     def student_view(self, context=None):
         """
-        The primary view of the InteractiveXBlock, shown to students
+        The primary view of the InteractiveContentXBlock, shown to students
         within the LMS.
         """
         if context is None:
@@ -114,15 +114,15 @@ class InteractiveXBlockViewMixin(StudioEditableXBlockMixin):
 
         # Create fragment
         frag = Fragment(template)
-        frag.add_css(self.resource_string("static/css/interactive_xblock.css"))
-        frag.add_javascript(self.resource_string("public/js/interactive_xblock.js"))
-        frag.initialize_js('InteractiveXBlockView')
+        frag.add_css(self.resource_string("static/css/interactive_content_xblock.css"))
+        frag.add_javascript(self.resource_string("public/js/interactive_content_xblock.js"))
+        frag.initialize_js('InteractiveContentXBlockView')
 
         return frag
 
     def studio_view(self, context=None):
         """
-        Create the studio view for editing the InteractiveXBlock
+        Create the studio view for editing the InteractiveContentXBlock
         """
         context = context or {}
         context = dict(context)
@@ -297,7 +297,7 @@ class InteractiveXBlockViewMixin(StudioEditableXBlockMixin):
         """
 
         # Update block fields
-        self.display_name = data.get('display_name', 'Interactive XBlock')
+        self.display_name = data.get('display_name', 'Interactive Content XBlock')
         self.html_content = data.get('html_content', '')
         self.css_content = data.get('css_content', '')
         self.js_content = data.get('js_content', '')

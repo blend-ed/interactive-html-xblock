@@ -1,5 +1,5 @@
 """
-Django settings for interactive_xblock project to be used in translation commands.
+Django settings for interactive_content_xblock project to be used in translation commands.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/3.2/topics/settings/
@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET', 'open_secret')
 
 INSTALLED_APPS = (
     'statici18n',
-    'interactive_xblock',
+    'interactive_content_xblock',
 )
 
 # Internationalization
@@ -39,12 +39,12 @@ STATIC_URL = '/static/'
 # statici18n
 # https://django-statici18n.readthedocs.io/en/latest/settings.html
 
-LOCALE_PATHS = [os.path.join(BASE_DIR, 'interactive_xblock', 'conf', 'locale')]
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'interactive_content_xblock', 'conf', 'locale')]
 
 STATICI18N_DOMAIN = 'text'
-STATICI18N_NAMESPACE = 'InteractiveXblockI18n'
+STATICI18N_NAMESPACE = 'InteractiveContentXblockI18n'
 STATICI18N_PACKAGES = (
-    'interactive_xblock',
+    'interactive_content_xblock',
 )
-STATICI18N_ROOT = 'interactive_xblock/public/js'
+STATICI18N_ROOT = 'interactive_content_xblock/public/js'
 STATICI18N_OUTPUT_DIR = 'translations'

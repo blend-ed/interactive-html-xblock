@@ -1,6 +1,6 @@
-/* InteractiveXBlock Styles */
+/* InteractiveContentXBlock Styles */
 
-.interactive-xblock {
+.interactive-content-xblock {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     max-width: 100%;
     margin: 0 auto;
@@ -129,7 +129,7 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .interactive-xblock {
+    .interactive-content-xblock {
         padding: 15px;
     }
 }

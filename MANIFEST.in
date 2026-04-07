@@ -3,4 +3,4 @@ include LICENSE.txt
 include README.rst
 include requirements/base.in
 include requirements/constraints.txt
-recursive-include interactive_xblock *.html *.png *.gif *.js *.css *.jpg *.jpeg *.svg
+recursive-include interactive_content_xblock *.html *.png *.gif *.js *.css *.jpg *.jpeg *.svg
