@@ -7,9 +7,9 @@ InteractiveJSBlock
    :target: https://github.com/blend-ed/interactive-html-xblock/blob/main/LICENSE
 .. |status| image:: https://img.shields.io/badge/status-alpha-orange.svg
 
-.. tip::
-   **New here?** Open the `interactive walkthrough <walkthrough/interactive_jsblock_workflow_walkthrough.html>`_
-   in your browser for a visual, step-by-step guide to the full authoring workflow.
+.. image:: walkthrough/interactive-jsblock-workflow.gif
+   :alt: Interactive JS Block workflow walkthrough
+   :target: https://blend-ed.github.io/interactive-html-xblock/walkthrough/interactive_jsblock_workflow_walkthrough.html
 
 A custom Open edX XBlock for creating interactive HTML/CSS/JS content with learner interaction tracking and auto-grading.
 
