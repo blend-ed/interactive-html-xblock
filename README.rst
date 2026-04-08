@@ -9,7 +9,7 @@ Interactive Content XBlock
 
 .. image:: walkthrough/interactive-content-xblock-workflow.gif
    :alt: Interactive Content XBlock workflow walkthrough
-   :target: https://blend-ed.github.io/interactive-content-xblock/walkthrough/interactive_content_xblock_workflow_walkthrough.html
+   :target: https://www.blend-ed.com/interactive-xblock
 
 A custom Open edX XBlock for creating interactive HTML/CSS/JS content with learner interaction tracking and auto-grading.
 
