@@ -45,7 +45,7 @@ Add to your ``OPENEDX_EXTRA_PIP_REQUIREMENTS``:
 
 .. code-block::
 
-    git+https://github.com/blend-ed/interactive-content-xblock.git@main
+    git+https://github.com/blend-ed/interactive-content-xblock.git@master
 
 Course Staff
 ~~~~~~~~~~~~
